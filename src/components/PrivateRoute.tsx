@@ -2,7 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth(); // Ya no hay error aquí
   const location = useLocation();
 
   if (loading) {
@@ -13,12 +13,9 @@ export function PrivateRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Allow guest access for demo purposes
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
   return <>{children}</>;
-  
-  // In a real implementation, we would use:
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login" state={{ from: location }} replace />;
-  // }
-  // return <>{children}</>;
 }

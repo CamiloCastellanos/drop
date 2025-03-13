@@ -17,19 +17,24 @@ export function Login() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
+  
     try {
       if (!email || !password) {
         throw new Error('Por favor ingrese su correo y contraseña');
       }
-
-      await login(email, password);
+  
+      // Se espera que login retorne el objeto con el uuid
+      const { uuid } = await login(email, password);
+  
+      // Almacenar el uuid en localStorage
+      localStorage.setItem('user_uuid', uuid);
+  
       await Swal.fire({
         icon: 'success',
         title: '¡Bienvenido!',
         text: 'Has iniciado sesión correctamente',
         timer: 1500,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
       navigate('/dashboard');
     } catch (err: any) {
@@ -38,12 +43,14 @@ export function Login() {
       await Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: errorMessage
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);
     }
   };
+  
+  
 
   const handleGuestAccess = () => {
     // Navigate directly to dashboard without authentication
@@ -135,14 +142,6 @@ export function Login() {
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-            </button>
-            
-            <button
-              type="button"
-              onClick={handleGuestAccess}
-              className="w-full flex justify-center py-2 px-4 border border-orange-300 rounded-md shadow-sm text-sm font-medium text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              Acceder como Invitado
             </button>
           </div>
 

@@ -5,7 +5,16 @@ import { useAuth } from '../hooks/useAuth';
 import Swal from 'sweetalert2';
 
 export function Register() {
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = React.useState<{
+    lastName: string;
+    firstName: string;
+    phone: string;
+    countryCode: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    role: 'DROPSHIPPER' | 'PROVIDER'; 
+  }>({
     lastName: '',
     firstName: '',
     phone: '',
@@ -13,14 +22,14 @@ export function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'DROPSHIPPER' as const
+    role: 'DROPSHIPPER' 
   });
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [error, setError] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const navigate = useNavigate();
-  const { register, login } = useAuth();
+  const { register } = useAuth();
 
   const validateForm = () => {
     if (!formData.email.trim()) {
@@ -86,7 +95,7 @@ export function Register() {
       });
       
       // Navegar al login
-      navigate('/login');
+      navigate('/dashboard');
     } catch (err: any) {
       const errorMessage = err.message || 'Error al registrar usuario';
       setError(errorMessage);
@@ -163,8 +172,6 @@ export function Register() {
                   onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
                 >
                   <option value="57">🇨🇴 57</option>
-                  <option value="51">🇵🇪 51</option>
-                  <option value="1">🇺🇸 1</option>
                 </select>
                 <input
                   id="phone"
@@ -288,14 +295,6 @@ export function Register() {
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
-            </button>
-            
-            <button
-              type="button"
-              onClick={handleGuestAccess}
-              className="w-full flex justify-center py-2 px-4 border border-orange-300 rounded-md shadow-sm text-sm font-medium text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              Acceder como Invitado
             </button>
           </div>
 

@@ -1,77 +1,184 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export function Profile() {
   const { t } = useTranslation();
-  const [phoneCode, setPhoneCode] = React.useState('51');
+  const [scannedIdFile, setScannedIdFile] = useState<File | null>(null);
+  const [phoneCode, setPhoneCode] = useState('51');
+  const [userData, setUserData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // Obtener UUID del usuario desde localStorage
+  const userUuid = localStorage.getItem('user_uuid');
+  console.log('UUID desde localStorage:', userUuid);
+
+  // Obtener los datos del usuario desde localStorage o API
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userUuid) {
+        console.error('No UUID encontrado en localStorage.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/user?uuid=${userUuid}`);
+        const data = await response.json();
+        
+        if (response.ok && data) {
+          console.log('Datos obtenidos del servidor:', data);
+          setUserData({
+            firstName: data.first_name || '',
+            lastName: data.last_name || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            address: data.address || '',
+          });
+        } else {
+          console.error('Error al obtener los datos:', data);
+        }
+      } catch (error) {
+        console.error('Error al hacer la solicitud API:', error);
+      }
+    };
+
+    fetchUserData();
+  }, [userUuid]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setUserData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!userUuid) {
+      console.error('No UUID encontrado. No se puede guardar el perfil.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('first_name', userData.firstName);
+    formData.append('last_name', userData.lastName);
+    formData.append('email', userData.email);
+    formData.append('phone_code', phoneCode);
+    formData.append('phone', userData.phone);
+    formData.append('address', userData.address);
+
+    if (selectedFile) {
+      formData.append('profile_image', selectedFile);
+    }
+
+    if (scannedIdFile) {
+      formData.append('cedula_image', scannedIdFile);
+    }
+
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'POST',
+        headers: {
+          Authorization: userUuid,
+        },
+        body: formData,
+      });
+
+      const contentType = response.headers.get('content-type');
+
+      if (!response.ok) {
+        console.error('Error en la respuesta:', response.status);
+        Swal.fire({
+          title: 'Error',
+          text: 'Hubo un problema al guardar tu perfil.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar',
+        });
+        return;
+      }
+
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        console.log('Respuesta del servidor:', data);
+
+        Swal.fire({
+          title: '¡Éxito!',
+          text: 'Tu perfil ha sido guardado correctamente.',
+          icon: 'success',
+          confirmButtonText: 'Aceptar',
+        });
+        localStorage.setItem('userData', JSON.stringify(userData));
+
+        if (selectedFile) {
+          localStorage.setItem('profileImage', selectedFile.name);
+        }
+      } else {
+        console.error('La respuesta no es JSON:', await response.text());
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Hubo un problema al procesar la solicitud.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-800">Datos Personales</h1>
-      
       <div className="bg-white rounded-lg shadow-sm">
         <div className="p-6">
           <h2 className="text-xl font-semibold mb-6">Datos Personales</h2>
-          
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
             <p className="text-blue-700">Los campos con asterisco(*) son obligatorios</p>
           </div>
 
           <div className="space-y-6">
-            {/* Logo and Image Upload */}
-            <div className="flex items-start space-x-4">
-              <div className="flex flex-col items-center space-y-2">
-                <img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=96&h=96&q=80"
-                  alt="Profile"
-                  className="w-24 h-24 rounded-full"
-                />
-                <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">
-                  Cambiar Logo
-                </button>
-              </div>
-            </div>
-
-            {/* Form Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nombre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Nombre *
                 </label>
                 <input
                   type="text"
-                  defaultValue="alexander jesus"
+                  name="firstName"
+                  value={userData.firstName}
+                  onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
-              {/* Apellido(s) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Apellido (s) *
                 </label>
                 <input
                   type="text"
-                  defaultValue="nieves montilva"
+                  name="lastName"
+                  value={userData.lastName}
+                  onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
-              {/* Email de Contacto */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email de Contacto *
                 </label>
                 <input
                   type="email"
-                  defaultValue="alexanderjesusnievesmontilva@gmail.com"
+                  name="email"
+                  value={userData.email}
+                  onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
-              {/* Teléfono */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Teléfono *
@@ -83,73 +190,35 @@ export function Profile() {
                       onChange={(e) => setPhoneCode(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     >
-                      <option value="51">🇵🇪 +51</option>
-                      <option value="1">🇺🇸 +1</option>
-                      <option value="34">🇪🇸 +34</option>
+                      <option value="57">🇨🇴 57</option>
                     </select>
                   </div>
                   <input
                     type="tel"
-                    defaultValue="944918994"
+                    name="phone"
+                    value={userData.phone}
+                    onChange={handleChange}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Dirección */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Direccion *
+                Dirección *
               </label>
               <textarea
                 rows={4}
+                name="address"
+                value={userData.address}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
-            {/* Document Uploads */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cedula escaneada
-                </label>
-                <div className="flex items-center space-x-2">
-                  <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm flex items-center">
-                    <Upload size={16} className="mr-2" />
-                    Seleccionar archivo
-                  </button>
-                  <span className="text-sm text-gray-500">Ningún archivo</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rut (opcional)
-                </label>
-                <div className="flex items-center space-x-2">
-                  <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm flex items-center">
-                    <Upload size={16} className="mr-2" />
-                    Seleccionar archivo
-                  </button>
-                  <span className="text-sm text-gray-500">Ningún archivo seleccionado</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Document Verification Status */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Document verification status:
-              </label>
-              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-                PENDIENTE
-              </span>
-            </div>
-
-            {/* Save Button */}
             <div className="flex justify-end">
-              <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+              <button onClick={handleSave} className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
                 Guardar
               </button>
             </div>

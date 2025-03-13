@@ -4,6 +4,7 @@ import { UserCircle, Wallet, ArrowRightLeft, Settings, KeyRound, LogOut, Chevron
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Swal from 'sweetalert2';
+import axios, { AxiosError } from 'axios';
 
 export function UserMenu() {
   const { t } = useTranslation();
@@ -15,11 +16,51 @@ export function UserMenu() {
   const [showNewPassword, setShowNewPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [formData, setFormData] = React.useState({
-    currentPassword: '',
+    currentPassword: '', // Campo para la contraseña actual
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [error, setError] = React.useState('');
+  const [firstName, setFirstName] = React.useState('');
+  const [email, setEmail] = React.useState(''); // Estado para el email
+  const [loading, setLoading] = React.useState(true);
+
+  // Obtener el nombre y email del usuario al montar el componente
+  React.useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const user_uuid = localStorage.getItem('user_uuid');
+        if (!user_uuid) {
+          throw new Error('UUID de usuario no encontrado');
+        }
+
+        console.log('UUID del usuario:', user_uuid);
+
+        const response = await axios.get(`/api/user-profile?user_uuid=${user_uuid}`);
+
+        console.log('Respuesta de la API:', response.data);
+
+        if (response.data.first_name) {
+          setFirstName(response.data.first_name);
+        }
+
+        // Verifica que el correo electrónico esté en la respuesta de la API
+        if (response.data.email) {
+          setEmail(response.data.email); // Establecer el email en el estado
+          console.log('Email del usuario:', response.data.email); // Agregar un log para verificar el email
+        } else {
+          console.log('No se encontró email en la respuesta');
+        }
+      } catch (error) {
+        console.error('Error obteniendo perfil:', error);
+        Swal.fire('Error', 'No se pudo cargar el perfil del usuario', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const menuItems = [
     { icon: UserCircle, text: t('userMenu.profile'), path: '/perfil' },
@@ -27,9 +68,9 @@ export function UserMenu() {
     { icon: ArrowRightLeft, text: t('userMenu.transfer'), path: '/transferencia' },
     { icon: Settings, text: t('userMenu.settings'), path: '/configuraciones/tienda' },
     { icon: KeyRound, text: t('userMenu.password'), action: () => setShowPasswordModal(true) },
-    { 
-      icon: LogOut, 
-      text: t('userMenu.logout'), 
+    {
+      icon: LogOut,
+      text: t('userMenu.logout'),
       action: async () => {
         const result = await Swal.fire({
           title: '¿Estás seguro?',
@@ -39,7 +80,7 @@ export function UserMenu() {
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#d33',
           confirmButtonText: 'Sí, cerrar sesión',
-          cancelButtonText: 'Cancelar'
+          cancelButtonText: 'Cancelar',
         });
 
         if (result.isConfirmed) {
@@ -49,11 +90,11 @@ export function UserMenu() {
             title: '¡Sesión cerrada!',
             text: 'Has cerrado sesión correctamente',
             timer: 1500,
-            showConfirmButton: false
+            showConfirmButton: false,
           });
           navigate('/');
         }
-      }
+      },
     },
   ];
 
@@ -81,20 +122,46 @@ export function UserMenu() {
     }
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validaciones antes de enviar
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-      setError('Hay errores en este formulario, por favor complete todos los campos');
+      setError('Por favor complete todos los campos');
       return;
     }
+
     if (formData.newPassword !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
       return;
     }
-    // Handle password change logic here
-    setShowPasswordModal(false);
-    setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    setError('');
+
+    if (formData.newPassword.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    try {
+      const response = await axios.post('/api/change-password', {
+        user_uuid: localStorage.getItem('user_uuid'),
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
+
+      if (response.status === 200) {
+        Swal.fire('Contraseña cambiada', 'Tu contraseña ha sido actualizada con éxito', 'success');
+        setShowPasswordModal(false);
+        setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      }
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error cambiando la contraseña:', error.response?.data);
+        setError(error.response?.data?.error || 'Hubo un problema al cambiar la contraseña');
+      } else {
+        console.error('Error desconocido:', error);
+        setError('Ocurrió un error desconocido');
+      }
+    }
   };
 
   return (
@@ -108,7 +175,9 @@ export function UserMenu() {
           alt="Profile"
           className="w-8 h-8 rounded-full"
         />
-        <span className="text-gray-700 font-medium">alexander jesus</span>
+        <span className="text-gray-700 font-medium">
+          {loading ? 'Cargando...' : firstName || 'Usuario'}
+        </span>
         <ChevronDown size={16} className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -132,7 +201,7 @@ export function UserMenu() {
         </div>
       )}
 
-      {/* Password Change Modal */}
+      {/* Modal de cambio de contraseña */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
@@ -147,21 +216,11 @@ export function UserMenu() {
             </div>
 
             <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
-              {/* Email (disabled) */}
-              <div>
-                <input
-                  type="email"
-                  value="alexanderjesusnievesmontilva@gmail.com"
-                  disabled
-                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500"
-                />
-              </div>
-
-              {/* Current Password */}
+              {/* Contraseña actual */}
               <div className="relative">
                 <input
                   type={showCurrentPassword ? 'text' : 'password'}
-                  placeholder="Current Password"
+                  placeholder="Contraseña actual"
                   value={formData.currentPassword}
                   onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -175,7 +234,7 @@ export function UserMenu() {
                 </button>
               </div>
 
-              {/* New Password */}
+              {/* Nueva contraseña */}
               <div className="relative">
                 <input
                   type={showNewPassword ? 'text' : 'password'}
@@ -193,7 +252,7 @@ export function UserMenu() {
                 </button>
               </div>
 
-              {/* Confirm Password */}
+              {/* Confirmar contraseña */}
               <div className="relative">
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -211,25 +270,15 @@ export function UserMenu() {
                 </button>
               </div>
 
-              {error && (
-                <p className="text-red-500 text-sm">{error}</p>
-              )}
+              {/* Error */}
+              {error && <div className="text-red-500 text-sm">{error}</div>}
 
-              <div className="flex justify-end gap-4 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordModal(false)}
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900"
-                >
-                  Cerrar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  Guardar
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none"
+              >
+                Cambiar Contraseña
+              </button>
             </form>
           </div>
         </div>

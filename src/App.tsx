@@ -33,6 +33,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { NotFound } from './pages/NotFound';  // Agregar la página 404
 
 function App() {
   return (
@@ -90,6 +91,9 @@ function App() {
           <Route path="/facturas" element={<Invoices />} />
           <Route path="/reportes" element={<Reports />} />
         </Route>
+
+        {/* 404 Page */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>
   );

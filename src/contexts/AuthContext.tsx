@@ -1,145 +1,93 @@
-import React from 'react';
-import { authService } from '../services/auth';
+import React, { createContext, useState, ReactNode, useEffect } from 'react';
+import axios from 'axios';
 
 interface AuthContextType {
+  register: (userData: RegisterData) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ uuid: string }>; // Cambié el tipo de retorno
+  logout: () => void;
+  user: any;
   isAuthenticated: boolean;
-  user: any | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  logout: () => Promise<void>;
-  forgotPassword: (email: string) => Promise<void>;
-  resetPassword: (token: string, password: string) => Promise<void>;
-  loading: boolean;
+  loading: boolean; // Agregamos la propiedad loading
 }
 
 interface RegisterData {
   firstName: string;
   lastName: string;
+  phone: string;
+  countryCode: string;
   email: string;
   password: string;
-  phone: string;
-  countryCode?: string;
-  role: 'DROPSHIPPER' | 'PROVIDER';
+  role: string;
 }
 
-export const AuthContext = React.createContext<AuthContextType>({
-  isAuthenticated: false,
-  user: null,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {},
-  forgotPassword: async () => {},
-  resetPassword: async () => {},
-  loading: false
-});
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = React.useState<any>(null);
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
-  const [loading, setLoading] = React.useState(true);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true); // Estado de carga
 
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-          const userData = await authService.getCurrentUser();
-          if (userData) {
-            setUser(userData);
-            setIsAuthenticated(true);
-          } else {
-            localStorage.removeItem('auth_token');
-            setIsAuthenticated(false);
-          }
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    checkAuth();
+  // Verificar si el usuario ya está autenticado al cargar
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+    }
+    setLoading(false); // Se termina la carga al verificar el token
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const register = async (userData: RegisterData) => {
     try {
-      setLoading(true);
-      const { user: userData, token } = await authService.login({ email, password });
-      localStorage.setItem('auth_token', token);
-      setUser(userData);
-      setIsAuthenticated(true);
-    } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
+      await axios.post('http://localhost:3000/api/register', userData);
+    } catch (error: any) {
+      console.error('Error al registrar usuario', error);
+      throw new Error('Error al registrar usuario');
     }
   };
 
-  const register = async (data: RegisterData) => {
+  const login = async (email: string, password: string): Promise<{ uuid: string }> => {
+    setLoading(true); // Inicia la carga mientras se autentica
     try {
-      setLoading(true);
-      await authService.register(data);
-    } catch (error) {
-      throw error;
+      const response = await axios.post('http://localhost:3000/api/login', { email, password });
+      
+      // Verificar que el servidor haya respondido correctamente
+      if (response.data && response.data.uuid) {
+        // Si se encontró el UUID, configuramos el estado
+        setUser({
+          userId: response.data.userId,
+          email: response.data.email,
+          role: response.data.role,
+          uuid: response.data.uuid, // Guardamos el UUID en el estado
+        });
+    
+        setIsAuthenticated(true); // Marcamos como autenticado
+        localStorage.setItem('token', response.data.token); // Almacenamos el token (si es necesario)
+  
+        return { uuid: response.data.uuid }; // Aquí devolvemos el UUID, como se espera en el tipo
+      } else {
+        throw new Error('Respuesta inesperada del servidor. Usuario no encontrado o uuid no disponible');
+      }
+    } catch (error: any) {
+      console.error('Error al iniciar sesión', error);
+      throw new Error('Error al iniciar sesión');
     } finally {
-      setLoading(false);
+      setLoading(false); // Termina la carga después de la autenticación
     }
   };
+  
+  
+  
 
-  const logout = async () => {
-    try {
-      setLoading(true);
-      await authService.logout();
-      localStorage.removeItem('auth_token');
-      setUser(null);
-      setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setLoading(false);
-    }
+  // Función logout
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('token');
   };
-
-  const forgotPassword = async (email: string) => {
-    try {
-      setLoading(true);
-      await authService.forgotPassword(email);
-    } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetPassword = async (token: string, password: string) => {
-    try {
-      setLoading(true);
-      await authService.resetPassword(token, password);
-    } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const value = React.useMemo(() => ({
-    isAuthenticated,
-    user,
-    login,
-    register,
-    logout,
-    forgotPassword,
-    resetPassword,
-    loading
-  }), [isAuthenticated, user, loading]);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ register, login, logout, user, isAuthenticated, loading }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
