@@ -82,18 +82,19 @@ app.post('/api/register', async (req, res) => {
             console.error('Error en el registro:', err);
             return res.status(500).json({ error: 'Error al registrar usuario' });
           }
+          // Actualizar el status a ON después de registrar
           const updateStatusQuery = `UPDATE users SET status = 'ON' WHERE id = ?`;
           db.query(updateStatusQuery, [result.insertId], (err) => {
             if (err) {
               console.error('Error actualizando el status a ON:', err);
               return res.status(500).json({ error: 'Error al actualizar el estado del usuario' });
             }
-          });
-          return res.status(201).json({
-            message: 'Usuario registrado exitosamente',
-            userId: result.insertId,
-            uuid: userUuid,
-            roleId: roleId,
+            return res.status(201).json({
+              message: 'Usuario registrado exitosamente',
+              userId: result.insertId,
+              uuid: userUuid,
+              roleId: roleId,
+            });
           });
         }
       );
@@ -103,6 +104,7 @@ app.post('/api/register', async (req, res) => {
     return res.status(500).json({ error: 'Error al registrar usuario' });
   }
 });
+
 
 // [2] Endpoint de login (sin columnas ip, city, country)
 app.post('/api/login', (req, res) => {
@@ -1664,6 +1666,521 @@ app.get('/api/cities/:departmentId', (req, res) => {
     res.json(results);
   });
 });
+
+// Crear un nuevo retiro
+app.post('/api/retiros', (req, res) => {
+  const {
+    monto,
+    banco,
+    cuenta,
+    user_uuid
+  } = req.body;
+
+  // Validar datos obligatorios
+  if (!monto || !banco || !cuenta || !user_uuid) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+
+  // Generar número de solicitud (puede ser un consecutivo, un random, etc.)
+  const numeroSolicitud = `R${Date.now()}`; // Ejemplo: "R1678765432100"
+  const fechaSolicitud = new Date();        // fecha y hora actual
+  const estadoInicial = 'Pendiente';        // Estado inicial
+
+  const insertQuery = `
+    INSERT INTO retiros (
+      monto, 
+      banco, 
+      numero_solicitud, 
+      fecha_solicitud, 
+      estado, 
+      cuenta, 
+      user_uuid
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    insertQuery,
+    [
+      monto,
+      banco,
+      numeroSolicitud,
+      fechaSolicitud,  // se guardará como DATETIME
+      estadoInicial,
+      cuenta,
+      user_uuid
+    ],
+    (err, result) => {
+      if (err) {
+        console.error('Error al insertar retiro:', err);
+        return res.status(500).json({ error: 'Error al insertar retiro' });
+      }
+      // Devolver la información del nuevo retiro
+      return res.json({
+        message: 'Retiro creado exitosamente',
+        retiroId: result.insertId,
+        numeroSolicitud,
+        fechaSolicitud,
+        estado: estadoInicial
+      });
+    }
+  );
+});
+
+
+
+// Obtener lista de retiros de un usuario
+app.get('/api/retiros', (req, res) => {
+  const { user_uuid } = req.query;
+  if (!user_uuid) {
+    return res.status(400).json({ error: 'Falta user_uuid' });
+  }
+
+  const selectQuery = `
+    SELECT
+      id,
+      monto,
+      banco,
+      numero_solicitud,
+      fecha_solicitud,
+      fecha_cierre,
+      estado,
+      cuenta
+    FROM retiros
+    WHERE user_uuid = ?
+    ORDER BY fecha_solicitud DESC
+  `;
+
+  db.query(selectQuery, [user_uuid], (err, results) => {
+    if (err) {
+      console.error('Error al obtener retiros:', err);
+      return res.status(500).json({ error: 'Error al obtener retiros' });
+    }
+    return res.json(results);
+  });
+});
+
+
+
+// Crear cuenta bancaria
+app.post('/api/addbank', (req, res) => {
+  const {
+    country,
+    bank,
+    identification_type,
+    identification_number,
+    account_type,
+    interbank_number,
+    user_uuid
+  } = req.body;
+
+  // Validar campos
+  if (!country || !bank || !identification_type || !identification_number || !account_type || !interbank_number || !user_uuid) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+
+  const insertQuery = `
+    INSERT INTO addbank (
+      country, 
+      bank, 
+      identification_type, 
+      identification_number, 
+      account_type, 
+      interbank_number, 
+      user_uuid
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    insertQuery,
+    [country, bank, identification_type, identification_number, account_type, interbank_number, user_uuid],
+    (err, result) => {
+      if (err) {
+        console.error('Error al insertar cuenta bancaria:', err);
+        return res.status(500).json({ error: 'Error al insertar cuenta bancaria' });
+      }
+      return res.json({
+        message: 'Cuenta bancaria creada exitosamente',
+        bankId: result.insertId
+      });
+    }
+  );
+});
+
+
+
+
+
+// Obtener cuentas bancarias de un usuario
+app.get('/api/addbank', (req, res) => {
+  const { user_uuid } = req.query;
+  if (!user_uuid) {
+    return res.status(400).json({ error: 'Falta user_uuid' });
+  }
+
+  const selectQuery = `
+    SELECT
+      id,
+      country,
+      bank,
+      identification_type,
+      identification_number,
+      account_type,
+      interbank_number
+    FROM addbank
+    WHERE user_uuid = ?
+    ORDER BY id DESC
+  `;
+
+  db.query(selectQuery, [user_uuid], (err, results) => {
+    if (err) {
+      console.error('Error al obtener cuentas bancarias:', err);
+      return res.status(500).json({ error: 'Error al obtener cuentas bancarias' });
+    }
+    return res.json(results);
+  });
+});
+
+
+
+app.get('/api/carriers', (req, res) => {
+  const { user_uuid } = req.query;
+  if (!user_uuid) {
+    return res.status(400).json({ error: 'Falta user_uuid' });
+  }
+
+  // Seleccionamos ordenados por carrier_order
+  const query = `
+    SELECT carrier_name AS name, carrier_order AS \`order\`
+    FROM carriers_order
+    WHERE user_uuid = ?
+    ORDER BY carrier_order ASC
+  `;
+  db.query(query, [user_uuid], (err, results) => {
+    if (err) {
+      console.error('Error obteniendo carriers:', err);
+      return res.status(500).json({ error: 'Error al obtener carriers' });
+    }
+    // results: [{ name: 'EVACOURIER', order: 1 }, { name: 'URBANO', order: 2 }, ...]
+    return res.json(results);
+  });
+});
+
+
+
+
+app.post('/api/carriers', (req, res) => {
+  const { user_uuid, carriers } = req.body;
+  // carriers: [{ name: 'EVACOURIER', order: 1 }, { name: 'URBANO', order: 2 }, ...]
+
+  if (!user_uuid || !Array.isArray(carriers)) {
+    return res.status(400).json({ error: 'Faltan datos o formato incorrecto' });
+  }
+
+  // Borramos los carriers existentes del usuario
+  const deleteQuery = `DELETE FROM carriers_order WHERE user_uuid = ?`;
+  db.query(deleteQuery, [user_uuid], (delErr) => {
+    if (delErr) {
+      console.error('Error al borrar carriers previos:', delErr);
+      return res.status(500).json({ error: 'Error al borrar carriers previos' });
+    }
+
+    // Insertamos los carriers con el nuevo orden
+    const insertQuery = `
+      INSERT INTO carriers_order (user_uuid, carrier_name, carrier_order)
+      VALUES (?, ?, ?)
+    `;
+    // Construimos un array de promesas para insertar cada carrier
+    const inserts = carriers.map((c) => new Promise((resolve, reject) => {
+      db.query(insertQuery, [user_uuid, c.name, c.order], (insErr) => {
+        if (insErr) return reject(insErr);
+        resolve(true);
+      });
+    }));
+
+    // Ejecutamos todas las inserciones
+    Promise.all(inserts)
+      .then(() => {
+        return res.json({ message: 'Carriers guardados correctamente' });
+      })
+      .catch((error) => {
+        console.error('Error insertando carriers:', error);
+        return res.status(500).json({ error: 'Error insertando carriers' });
+      });
+  });
+});
+
+
+
+
+app.get('/api/productos', (req, res) => {
+  const {
+    busqueda,
+    categoria,
+    proveedor,
+    precio_min,
+    precio_max,
+    stock_min,
+    stock_max
+  } = req.query;
+
+  // Construir el WHERE dinámico sin el filtro de usuario
+  let whereClauses = [];
+  let values = [];
+
+  if (busqueda) {
+    whereClauses.push('nombre LIKE ?');
+    values.push(`%${busqueda}%`);
+  }
+  if (categoria) {
+    whereClauses.push('categoria = ?');
+    values.push(categoria);
+  }
+  if (proveedor) {
+    whereClauses.push('proveedor = ?');
+    values.push(proveedor);
+  }
+  if (precio_min !== undefined && precio_min !== '') {
+    whereClauses.push('precio_proveedor >= ?');
+    values.push(precio_min);
+  }
+  if (precio_max !== undefined && precio_max !== '') {
+    whereClauses.push('precio_proveedor <= ?');
+    values.push(precio_max);
+  }
+  if (stock_min !== undefined && stock_min !== '') {
+    whereClauses.push('stock >= ?');
+    values.push(stock_min);
+  }
+  if (stock_max !== undefined && stock_max !== '') {
+    whereClauses.push('stock <= ?');
+    values.push(stock_max);
+  }
+
+  const whereString = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
+
+  const query = `
+    SELECT
+      id,
+      nombre,
+      categoria,
+      proveedor,
+      precio_proveedor,
+      precio_sugerido,
+      stock,
+      imagen
+    FROM productos
+    ${whereString}
+    ORDER BY id DESC
+  `;
+
+  db.query(query, values, (err, results) => {
+    if (err) {
+      console.error('Error obteniendo productos:', err);
+      return res.status(500).json({ error: 'Error al obtener productos' });
+    }
+    res.json(results);
+  });
+});
+
+
+
+
+
+app.post('/api/productos', (req, res) => {
+  const {
+    nombre,
+    categoria,
+    proveedor,
+    precio_proveedor,
+    precio_sugerido,
+    stock,
+    imagen
+  } = req.body;
+
+  if (!nombre || !categoria || !proveedor || precio_proveedor == null || precio_sugerido == null || stock == null || !imagen) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+
+  const insertQuery = `
+    INSERT INTO productos (
+      nombre,
+      categoria,
+      proveedor,
+      precio_proveedor,
+      precio_sugerido,
+      stock,
+      imagen
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    insertQuery,
+    [nombre, categoria, proveedor, precio_proveedor, precio_sugerido, stock, imagen],
+    (err, result) => {
+      if (err) {
+        console.error('Error al insertar producto:', err);
+        return res.status(500).json({ error: 'Error al insertar producto' });
+      }
+      return res.json({
+        message: 'Producto creado exitosamente',
+        id_producto: result.insertId
+      });
+    }
+  );
+});
+
+
+
+
+// Endpoint para obtener un producto por su ID
+app.get('/api/productos/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT 
+      id,
+      nombre,
+      categoria,
+      proveedor,
+      precio_proveedor,
+      precio_sugerido,
+      stock,
+      imagen
+    FROM productos
+    WHERE id = ?
+  `;
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('Error obteniendo el producto:', err);
+      return res.status(500).json({ error: 'Error al obtener el producto' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+    res.json(results[0]);
+  });
+});
+
+
+app.get('/api/user-role', (req, res) => {
+  console.log('Llamada a /api/user-role con query:', req.query);
+  const { uuid } = req.query;
+  if (!uuid) {
+    console.error('No se recibió uuid en la query');
+    return res.status(400).json({ error: 'Se requiere el UUID del usuario' });
+  }
+
+  const query = `
+    SELECT users.role_id, roles.name AS role_name
+    FROM users
+    INNER JOIN roles ON users.role_id = roles.id
+    WHERE users.uuid = ?
+    LIMIT 1
+  `;
+  
+  console.log('Ejecutando consulta con uuid:', uuid);
+  db.query(query, [uuid], (err, results) => {
+    if (err) {
+      console.error('Error obteniendo el rol del usuario:', err);
+      return res.status(500).json({ error: 'Error al obtener el rol' });
+    }
+    console.log('Resultados de la consulta:', results);
+    if (!results || results.length === 0) {
+      console.error('Usuario no encontrado para uuid:', uuid);
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    console.log('role_id del usuario:', results[0].role_id);
+    res.json(results[0]); // Ejemplo: { role_id: 3, role_name: "PROVEEDOR / MARCA" }
+  });
+});
+
+
+
+
+app.get('/api/admin-role', (req, res) => {
+  const { uuid } = req.query;
+  if (!uuid) {
+    return res.status(400).json({ error: 'Se requiere el UUID del usuario' });
+  }
+
+  const query = `
+    SELECT users.role_id, roles.name AS role_name
+    FROM users
+    INNER JOIN roles ON users.role_id = roles.id
+    WHERE users.uuid = ? AND users.role_id = 1
+    LIMIT 1
+  `;
+
+  console.log('Ejecutando consulta para ADMIN con uuid:', uuid);
+  db.query(query, [uuid], (err, results) => {
+    if (err) {
+      console.error('Error obteniendo el rol del usuario (ADMIN):', err);
+      return res.status(500).json({ error: 'Error al obtener el rol' });
+    }
+    console.log('Resultados de la consulta (ADMIN):', results);
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado o no es ADMIN' });
+    }
+    console.log('role_id del usuario admin:', results[0].role_id);
+    res.json(results[0]);
+  });
+});
+
+
+// ============================
+// ENDPOINTS PARA LA TIENDA
+// ============================
+
+// POST: Crear una tienda (global)
+app.post('/api/stores', (req, res) => {
+  const { name, categories } = req.body;
+
+  // Validar campos obligatorios
+  if (!name || !categories) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios (name y categories).' });
+  }
+
+  const insertQuery = `
+    INSERT INTO stores (name, categories)
+    VALUES (?, ?)
+  `;
+  db.query(
+    insertQuery,
+    [name, categories],
+    (err, result) => {
+      if (err) {
+        console.error('Error al insertar tienda:', err);
+        return res.status(500).json({ error: 'Error al insertar tienda' });
+      }
+      console.log('Tienda insertada correctamente, ID:', result.insertId);
+      return res.status(201).json({
+        message: 'Tienda creada correctamente',
+        storeId: result.insertId,
+      });
+    }
+  );
+});
+
+// GET: Obtener todas las tiendas (global)
+app.get('/api/stores', (req, res) => {
+  const query = 'SELECT * FROM stores ORDER BY created_at DESC';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error al obtener tiendas:', err);
+      return res.status(500).json({ error: 'Error al obtener tiendas' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No hay tiendas disponibles' });
+    }
+    res.json(results);
+  });
+});
+
+
+
+
+
+
+
 
 // ============================
 // INICIAR SERVER

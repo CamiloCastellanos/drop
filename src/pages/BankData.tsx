@@ -1,27 +1,37 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, X } from 'lucide-react';
+import Swal from 'sweetalert2';
 
+// Definimos la interfaz para la cuenta bancaria
 interface BankAccount {
-  id: string;
+  id: number;
   country: string;
   bank: string;
-  accountType: string;
-  accountNumber: string;
-  identificationNumber: string;
+  identification_type: string;
+  identification_number: string;
+  account_type: string;
+  interbank_number: string;
 }
 
 export function BankData() {
   const { t } = useTranslation();
+
+  // Modal de agregar cuenta
   const [showModal, setShowModal] = React.useState(false);
+
+  // Campos del formulario
   const [selectedCountry, setSelectedCountry] = React.useState('');
   const [selectedBank, setSelectedBank] = React.useState('');
-  const [bankAccounts, setBankAccounts] = React.useState<BankAccount[]>([]);
   const [identificationType, setIdentificationType] = React.useState('');
   const [identificationNumber, setIdentificationNumber] = React.useState('');
   const [accountType, setAccountType] = React.useState('');
   const [accountNumber, setAccountNumber] = React.useState('');
 
+  // Lista de cuentas bancarias
+  const [bankAccounts, setBankAccounts] = React.useState<BankAccount[]>([]);
+
+  // Listas de opciones
   const countries = [
     { code: 'PE', name: 'PERU' },
     { code: 'CO', name: 'COLOMBIA' }
@@ -54,22 +64,88 @@ export function BankData() {
     'Cuenta Maestra'
   ];
 
-  const handleAddAccount = () => {
-    if (selectedCountry && selectedBank && identificationType && identificationNumber && accountType && accountNumber) {
-      const newAccount: BankAccount = {
-        id: Date.now().toString(),
-        country: selectedCountry,
-        bank: selectedBank,
-        accountType,
-        accountNumber,
-        identificationNumber
-      };
-      setBankAccounts([...bankAccounts, newAccount]);
-      setShowModal(false);
-      resetForm();
+  // Función para cargar las cuentas bancarias desde la BD
+  const loadBankAccounts = () => {
+    const userUUID = localStorage.getItem('user_uuid');
+    if (!userUUID) {
+      console.error('No se encontró user_uuid en localStorage');
+      return;
     }
+    fetch(`/api/addbank?user_uuid=${userUUID}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setBankAccounts(data);
+        } else {
+          setBankAccounts([]);
+        }
+      })
+      .catch((err) => {
+        console.error('Error al obtener cuentas bancarias:', err);
+      });
   };
 
+  // Cargar las cuentas bancarias al montar el componente
+  React.useEffect(() => {
+    loadBankAccounts();
+  }, []);
+
+  // Función para crear una cuenta bancaria en la BD
+  const handleAddAccount = () => {
+    // Obtenemos user_uuid del localStorage
+    const userUUID = localStorage.getItem('user_uuid');
+    if (!userUUID) {
+      Swal.fire('Error', 'No se encontró user_uuid en localStorage', 'error');
+      return;
+    }
+
+    // Validar campos
+    if (!selectedCountry || !selectedBank || !identificationType || !identificationNumber || !accountType || !accountNumber) {
+      Swal.fire('Error', 'Por favor completa todos los campos', 'error');
+      return;
+    }
+
+    // Preparar payload
+    const payload = {
+      country: selectedCountry,              // "PE" o "CO"
+      bank: selectedBank,                    // p. ej. "BCP"
+      identification_type: identificationType,
+      identification_number: identificationNumber,
+      account_type: accountType,
+      interbank_number: accountNumber,
+      user_uuid: userUUID
+    };
+
+    // POST /api/addbank
+    fetch('/api/addbank', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          Swal.fire('Error', data.error, 'error');
+          return;
+        }
+        // Si se insertó correctamente:
+        Swal.fire({
+          icon: 'success',
+          title: 'Cuenta Bancaria',
+          text: 'Se ha agregado la cuenta bancaria exitosamente.',
+        });
+        // Cerrar modal y recargar cuentas
+        setShowModal(false);
+        resetForm();
+        loadBankAccounts();
+      })
+      .catch((err) => {
+        console.error('Error al insertar cuenta bancaria:', err);
+        Swal.fire('Error', 'Ocurrió un error al agregar la cuenta bancaria', 'error');
+      });
+  };
+
+  // Limpiar campos del formulario
   const resetForm = () => {
     setSelectedCountry('');
     setSelectedBank('');
@@ -99,7 +175,32 @@ export function BankData() {
           </div>
         ) : (
           <div className="p-6">
-            {/* Add bank accounts list here */}
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left pb-2">ID</th>
+                  <th className="text-left pb-2">País</th>
+                  <th className="text-left pb-2">Banco</th>
+                  <th className="text-left pb-2">Tipo Ident.</th>
+                  <th className="text-left pb-2">N° Ident.</th>
+                  <th className="text-left pb-2">Tipo Cuenta</th>
+                  <th className="text-left pb-2">N° Interbancario</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bankAccounts.map((acc) => (
+                  <tr key={acc.id} className="border-b border-gray-100">
+                    <td className="py-2">{acc.id}</td>
+                    <td className="py-2">{acc.country}</td>
+                    <td className="py-2">{acc.bank}</td>
+                    <td className="py-2">{acc.identification_type}</td>
+                    <td className="py-2">{acc.identification_number}</td>
+                    <td className="py-2">{acc.account_type}</td>
+                    <td className="py-2">{acc.interbank_number}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
@@ -219,7 +320,7 @@ export function BankData() {
                     </select>
                   </div>
 
-                  {/* Account Number */}
+                  {/* Account Number (Interbank) */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Número de Cuenta Interbancario
@@ -248,7 +349,14 @@ export function BankData() {
               <button
                 onClick={handleAddAccount}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                disabled={!selectedCountry || !selectedBank || !identificationType || !identificationNumber || !accountType || !accountNumber}
+                disabled={
+                  !selectedCountry ||
+                  !selectedBank ||
+                  !identificationType ||
+                  !identificationNumber ||
+                  !accountType ||
+                  !accountNumber
+                }
               >
                 Aceptar
               </button>

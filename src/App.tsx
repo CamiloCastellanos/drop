@@ -3,8 +3,9 @@ import { Layout } from './components/Layout';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
 import { Dashboard } from './pages/Dashboard';
-import { Catalog } from './pages/Catalog';
+import { Catalogo } from './pages/Catalogo';
 import { Suppliers } from './pages/Suppliers';
+import { Vendedor } from './pages/Vendedor';
 import { Warranties } from './pages/Warranties';
 import { WarrantyShipments } from './pages/WarrantyShipments';
 import { WarrantyCollections } from './pages/WarrantyCollections';
@@ -27,13 +28,26 @@ import { AbandonedCarts } from './pages/AbandonedCarts';
 import { Labels } from './pages/Labels';
 import { OrderSettings } from './pages/OrderSettings';
 import { Invoices } from './pages/Invoices';
+import { Notas } from './pages/Notas';
 import { Reports } from './pages/Reports';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
-import { NotFound } from './pages/NotFound';  // Agregar la página 404
+import { NotFound } from './pages/NotFound';  
+import { PageInDevelopment } from './pages/PageInDevelopment';
+import { Calendar } from './pages/Calendar';
+import { Campaign } from './pages/Campaign';
+import { Automation } from './pages/Automation';
+import { Setting } from './pages/Setting';
+import { Integrations } from './pages/Integrations';
+import { DetalleProducto } from './pages/DetalleProducto';
+
+
+
+
+
 
 function App() {
   return (
@@ -64,8 +78,9 @@ function App() {
           </PrivateRoute>
         }>
           <Route path="/home" element={<Home />} />
-          <Route path="/productos/catalogo" element={<Catalog />} />
+          <Route path="/productos/catalogo" element={<Catalogo />} />
           <Route path="/productos/proveedores" element={<Suppliers />} />
+          <Route path="/productos/vendedor" element={<Vendedor />} />
           <Route path="/garantias/lista" element={<Warranties />} />
           <Route path="/garantias/despachos" element={<WarrantyShipments />} />
           <Route path="/garantias/recolecciones" element={<WarrantyCollections />} />
@@ -88,8 +103,19 @@ function App() {
           <Route path="/clientes" element={<Clients />} />
           <Route path="/dropi-card" element={<DropiCard />} />
           <Route path="/transportadora/preferencias" element={<CarrierPreferences />} />
-          <Route path="/facturas" element={<Invoices />} />
+          <Route path="/facturas/facturas" element={<Invoices />} />
+          <Route path="/facturas/notas" element={<Notas />} />
+          <Route path="/desarrollo" element={<PageInDevelopment />} />
           <Route path="/reportes" element={<Reports />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/marketing/campaign" element={<Campaign />} />
+          <Route path="/marketing/automation" element={<Automation />} />
+          <Route path="/marketing/setting" element={<Setting />} />
+          <Route path="/integrations" element={<Integrations />} />
+          <Route path="/producto/:id" element={<DetalleProducto />} />
+
+          
+
         </Route>
 
         {/* 404 Page */}

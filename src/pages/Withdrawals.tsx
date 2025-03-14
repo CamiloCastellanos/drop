@@ -1,13 +1,34 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { History, X } from 'lucide-react';
+import Swal from 'sweetalert2';
+
+interface Withdrawal {
+  id: number;
+  monto: number;
+  banco: string;
+  numero_solicitud: string;
+  fecha_solicitud: string;   // Vendrá como string desde el servidor
+  fecha_cierre: string | null;
+  estado: string;
+  cuenta: string;
+}
 
 export function Withdrawals() {
   const { t } = useTranslation();
+
+  // Estados del formulario
   const [amount, setAmount] = React.useState('');
   const [selectedBank, setSelectedBank] = React.useState('');
+  const [account, setAccount] = React.useState(''); // Nuevo campo para la cuenta bancaria
+
+  // Control del modal de historial
   const [showHistoryModal, setShowHistoryModal] = React.useState(false);
 
+  // Lista de retiros
+  const [withdrawalHistory, setWithdrawalHistory] = React.useState<Withdrawal[]>([]);
+
+  // Bancos disponibles
   const banks = [
     'Banco de Crédito del Perú',
     'BBVA',
@@ -16,16 +37,94 @@ export function Withdrawals() {
     'Banco de la Nación'
   ];
 
-  const withdrawalHistory = [
-    // Add withdrawal history data here if needed
-  ];
+  // Función para cargar el historial de retiros (GET /api/retiros)
+  const loadWithdrawals = () => {
+    const userUUID = localStorage.getItem('user_uuid');
+    if (!userUUID) {
+      console.error('No se encontró user_uuid en localStorage');
+      return;
+    }
+    fetch(`/api/retiros?user_uuid=${userUUID}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setWithdrawalHistory(data);
+        } else {
+          setWithdrawalHistory([]);
+        }
+      })
+      .catch((err) => {
+        console.error('Error al obtener retiros:', err);
+      });
+  };
+
+  // Al hacer clic en "Procesar"
+  const handleProcess = () => {
+    const userUUID = localStorage.getItem('user_uuid');
+    if (!userUUID) {
+      Swal.fire('Error', 'No se encontró user_uuid en localStorage', 'error');
+      return;
+    }
+
+    // Validar campos
+    if (!amount || !selectedBank || !account) {
+      Swal.fire('Error', 'Por favor completa todos los campos', 'error');
+      return;
+    }
+
+    // Crear el payload
+    const payload = {
+      monto: amount,
+      banco: selectedBank,
+      cuenta: account,
+      user_uuid: userUUID
+    };
+
+    // Llamar a POST /api/retiros
+    fetch('/api/retiros', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          Swal.fire('Error', data.error, 'error');
+          return;
+        }
+        // Si todo OK, mostrar sweetalert de éxito
+        Swal.fire({
+          icon: 'success',
+          title: 'Retiro Procesado',
+          text: `Tu solicitud #${data.numeroSolicitud} se ha creado con éxito.`,
+        });
+
+        // Limpiar campos
+        setAmount('');
+        setSelectedBank('');
+        setAccount('');
+
+        // Opcional: Recargar la lista para que aparezca en el historial
+        loadWithdrawals();
+      })
+      .catch((err) => {
+        console.error('Error al crear retiro:', err);
+        Swal.fire('Error', 'Ocurrió un error al procesar el retiro', 'error');
+      });
+  };
+
+  // Al hacer clic en "Historial de Retiros"
+  const handleShowHistory = () => {
+    loadWithdrawals();
+    setShowHistoryModal(true);
+  };
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-gray-800">Retiros de Saldo</h1>
 
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Withdrawal Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -65,18 +164,35 @@ export function Withdrawals() {
               </div>
             </div>
           </div>
+
+          {/* Account (nuevo campo) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cuenta
+            </label>
+            <input
+              type="text"
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
+              placeholder="Número de cuenta"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
           <button 
-            onClick={() => setShowHistoryModal(true)}
+            onClick={handleShowHistory}
             className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             <History size={20} className="mr-2" />
             Historial de Retiros
           </button>
 
-          <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+          <button
+            onClick={handleProcess}
+            className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+          >
             Procesar
           </button>
         </div>
@@ -118,8 +234,13 @@ export function Withdrawals() {
                       </tr>
                     ) : (
                       withdrawalHistory.map((withdrawal, index) => (
-                        <tr key={index}>
-                          {/* Add withdrawal history row data here */}
+                        <tr key={withdrawal.id}>
+                          <td className="py-2">{withdrawal.id}</td>
+                          <td className="py-2">{withdrawal.numero_solicitud}</td>
+                          <td className="py-2">{withdrawal.fecha_solicitud || '-'}</td>
+                          <td className="py-2">{withdrawal.fecha_cierre || '-'}</td>
+                          <td className="py-2">{withdrawal.estado}</td>
+                          <td className="py-2">{withdrawal.cuenta}</td>
                         </tr>
                       ))
                     )}

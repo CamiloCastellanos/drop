@@ -13,7 +13,7 @@ export function Register() {
     email: string;
     password: string;
     confirmPassword: string;
-    role: 'DROPSHIPPER' | 'PROVIDER'; 
+    role: 'DROPSHIPPER' | 'PROVEEDOR / MARCA';
   }>({
     lastName: '',
     firstName: '',
@@ -22,7 +22,7 @@ export function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'DROPSHIPPER' 
+    role: 'DROPSHIPPER'
   });
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
@@ -94,7 +94,7 @@ export function Register() {
         showConfirmButton: false
       });
       
-      // Navegar al login
+      // Navegar al dashboard (o a la página de login)
       navigate('/dashboard');
     } catch (err: any) {
       const errorMessage = err.message || 'Error al registrar usuario';
@@ -110,7 +110,6 @@ export function Register() {
   };
 
   const handleGuestAccess = () => {
-    // Navigate directly to dashboard without authentication
     navigate('/dashboard');
   };
 
@@ -269,8 +268,8 @@ export function Register() {
               <label className="flex items-center">
                 <input
                   type="radio"
-                  checked={formData.role === 'PROVIDER'}
-                  onChange={() => setFormData({ ...formData, role: 'PROVIDER' })}
+                  checked={formData.role === 'PROVEEDOR / MARCA'}
+                  onChange={() => setFormData({ ...formData, role: 'PROVEEDOR / MARCA' })}
                   className="form-radio h-4 w-4 text-orange-600"
                 />
                 <span className="ml-2">PROVEEDOR / MARCA</span>

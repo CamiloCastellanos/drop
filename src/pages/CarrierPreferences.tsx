@@ -1,37 +1,44 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { GripVertical } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface Carrier {
-  id: string;
-  name: string;
-  logo: string;
-  order: number;
+  name: string;      // "EVACOURIER"
+  logo: string;      // URL de logo
+  order: number;     // 1, 2, 3 ...
 }
 
 export function CarrierPreferences() {
   const { t } = useTranslation();
-  const [carriers, setCarriers] = React.useState<Carrier[]>([
-    {
-      id: '1',
-      name: 'EVACOURIER',
-      logo: 'https://images.unsplash.com/photo-1494412519320-aa613dfb7738?w=40&h=40&q=80',
-      order: 1
-    },
-    {
-      id: '2',
-      name: 'URBANO',
-      logo: 'https://images.unsplash.com/photo-1494412519320-aa613dfb7738?w=40&h=40&q=80',
-      order: 2
-    },
-    {
-      id: '3',
-      name: 'FENIX',
-      logo: 'https://images.unsplash.com/photo-1494412519320-aa613dfb7738?w=40&h=40&q=80',
-      order: 3
-    }
-  ]);
+  const [carriers, setCarriers] = React.useState<Carrier[]>([]);
   const [draggedCarrier, setDraggedCarrier] = React.useState<Carrier | null>(null);
+
+  // Cargar carriers desde la BD al montar
+  React.useEffect(() => {
+    loadCarriersFromDB();
+  }, []);
+
+  const loadCarriersFromDB = () => {
+    const userUUID = localStorage.getItem('user_uuid');
+    if (!userUUID) {
+      console.error('No se encontró user_uuid en localStorage');
+      return;
+    }
+    fetch(`/api/carriers?user_uuid=${userUUID}`)
+      .then((res) => res.json())
+      .then((data) => {
+        // data: [{ name: 'EVACOURIER', order: 1 }, { name: 'URBANO', order: 2 } ...]
+        // Aseguramos que tengan logo si deseas (puedes mapear manualmente)
+        const withLogos = data.map((c: any) => ({
+          name: c.name,
+          order: c.order,
+          logo: 'https://images.unsplash.com/photo-1494412519320-aa613dfb7738?w=40&h=40&q=80' 
+        }));
+        setCarriers(withLogos);
+      })
+      .catch((err) => console.error('Error fetching carriers:', err));
+  };
 
   const handleDragStart = (carrier: Carrier) => {
     setDraggedCarrier(carrier);
@@ -39,18 +46,18 @@ export function CarrierPreferences() {
 
   const handleDragOver = (e: React.DragEvent, carrier: Carrier) => {
     e.preventDefault();
-    if (!draggedCarrier || draggedCarrier.id === carrier.id) return;
+    if (!draggedCarrier || draggedCarrier.name === carrier.name) return;
 
     const updatedCarriers = [...carriers];
-    const draggedIndex = carriers.findIndex(c => c.id === draggedCarrier.id);
-    const hoverIndex = carriers.findIndex(c => c.id === carrier.id);
+    const draggedIndex = updatedCarriers.findIndex(c => c.name === draggedCarrier.name);
+    const hoverIndex = updatedCarriers.findIndex(c => c.name === carrier.name);
 
-    // Swap the orders
+    // Intercambiar el order
     const draggedOrder = updatedCarriers[draggedIndex].order;
     updatedCarriers[draggedIndex].order = updatedCarriers[hoverIndex].order;
     updatedCarriers[hoverIndex].order = draggedOrder;
 
-    // Sort by order
+    // Ordenar el array por 'order'
     updatedCarriers.sort((a, b) => a.order - b.order);
     
     setCarriers(updatedCarriers);
@@ -58,6 +65,45 @@ export function CarrierPreferences() {
 
   const handleDragEnd = () => {
     setDraggedCarrier(null);
+  };
+
+  // Guardar cambios en la BD
+  const handleSave = () => {
+    const userUUID = localStorage.getItem('user_uuid');
+    if (!userUUID) {
+      Swal.fire('Error', 'No se encontró user_uuid en localStorage', 'error');
+      return;
+    }
+    // Construir payload
+    // carriers: [{ name: 'EVACOURIER', order: 1, logo: ... }, ...]
+    // El backend solo necesita name y order
+    const payloadCarriers = carriers.map(c => ({
+      name: c.name,
+      order: c.order
+    }));
+
+    fetch('/api/carriers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_uuid: userUUID, carriers: payloadCarriers })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          Swal.fire('Error', data.error, 'error');
+          return;
+        }
+        // Exito
+        Swal.fire({
+          icon: 'success',
+          title: 'Cambios guardados',
+          text: 'El orden de las transportadoras se ha actualizado.',
+        });
+      })
+      .catch(err => {
+        console.error('Error saving carriers:', err);
+        Swal.fire('Error', 'Ocurrió un error al guardar los cambios', 'error');
+      });
   };
 
   return (
@@ -76,14 +122,14 @@ export function CarrierPreferences() {
           <div className="space-y-2">
             {carriers.map((carrier) => (
               <div
-                key={carrier.id}
+                key={carrier.name}
                 draggable
                 onDragStart={() => handleDragStart(carrier)}
                 onDragOver={(e) => handleDragOver(e, carrier)}
                 onDragEnd={handleDragEnd}
                 className={`
                   flex items-center p-4 bg-white border border-gray-200 rounded-lg cursor-move
-                  ${draggedCarrier?.id === carrier.id ? 'opacity-50' : ''}
+                  ${draggedCarrier?.name === carrier.name ? 'opacity-50' : ''}
                   hover:border-orange-500 transition-colors duration-200
                 `}
               >
@@ -106,7 +152,10 @@ export function CarrierPreferences() {
       </div>
 
       <div className="flex justify-end">
-        <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200">
+        <button
+          onClick={handleSave}
+          className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200"
+        >
           Guardar cambios
         </button>
       </div>
