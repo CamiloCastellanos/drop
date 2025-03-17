@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (userData: RegisterData) => {
     try {
-      await axios.post('http://localhost:3000/api/register', userData);
+      await axios.post('https://dropi.co.alexcode.org/api/register', userData);
     } catch (error: any) {
       console.error('Error al registrar usuario', error);
       throw new Error('Error al registrar usuario');
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<{ uuid: string }> => {
     setLoading(true); // Inicia la carga mientras se autentica
     try {
-      const response = await axios.post('http://localhost:3000/api/login', { email, password });
+      const response = await axios.post('https://dropi.co.alexcode.org/api/login', { email, password });
       
       // Verificar que el servidor haya respondido correctamente
       if (response.data && response.data.uuid) {

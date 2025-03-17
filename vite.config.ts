@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000', // URL de tu servidor backend
+        target: 'https://dropi.co.alexcode.org/', // URL de tu servidor backend
         changeOrigin: true,
         secure: false,
       },
