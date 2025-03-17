@@ -7,7 +7,7 @@ const multer = require('multer');
 const path = require('path');
 require('dotenv').config();
 
-// NUEVAS IMPORTACIONES para User-Agent (ya no usaremos IP)
+// NUEVAS IMPORTACIONES para User-Agent (opcional)
 const useragent = require('useragent');
 
 const app = express();
@@ -20,18 +20,59 @@ app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json());
 
-// Configuración de Multer para manejo de archivos
+// ──────────────────────────────────────────────────────────
+// 1) CONFIGURACIÓN MULTER (Subida de imágenes)
+// ──────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Carpeta donde se guardarán los archivos
+    // Guardar en /public/uploads
+    cb(null, path.join(__dirname, 'public/uploads'));
   },
   filename: (req, file, cb) => {
+    // Ej: 1692196765123-nombre.jpg
     cb(null, `${Date.now()}-${file.originalname}`);
-  }
+  },
 });
 const upload = multer({ storage });
 
-// Conexión a la base de datos
+
+// Servir la carpeta de uploads como estático
+app.use('../../backend/public/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+
+app.use('../../backend/public/suppliers', express.static(path.join(__dirname, 'public/suppliers')));
+
+// Configuración de Multer (para logo de la tienda, por ejemplo)
+const storageSuppliers = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // Guardar en /public/suppliers
+    cb(null, path.join(__dirname, 'public/suppliers'));
+  },
+  filename: (req, file, cb) => {
+    // Ej: 1678901234567-nombre_original.png
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const uploadSuppliers = multer({ storage: storageSuppliers });
+
+// Configuración de Multer para manejo de archivos en perfil (guardados en public/profile)
+const storageProfile = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, 'public/profile'));
+  },
+  filename: (req, file, cb) => {
+    // Puedes personalizar el nombre del archivo si lo deseas
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const uploadProfile = multer({ storage: storageProfile });
+
+// Servir archivos estáticos (para imágenes de perfil)
+app.use('../../backend/public/profile', express.static(path.join(__dirname, 'public/profile')));
+
+// ──────────────────────────────────────────────────────────
+// 2) CONEXIÓN A LA BASE DE DATOS
+// ──────────────────────────────────────────────────────────
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USERNAME,
@@ -309,10 +350,17 @@ app.get('/api/user', (req, res) => {
   });
 });
 
+// ===========================================
 // [6] Endpoint para guardar/actualizar el perfil en la tabla users
-app.post('/api/profile', upload.fields([]), (req, res) => {
+// ===========================================
+app.post('/api/profile', uploadProfile.single('profile_image'), (req, res) => {
   const { first_name, last_name, email, country_code, phone, address } = req.body;
   const user_uuid = req.headers.authorization;
+  let imagen = null;
+  if (req.file) {
+    // La ruta que se guardará en la BD y que será accesible desde el frontend
+    imagen = `../../backend/public/profile/${req.file.filename}`;
+  }
   const checkEmailQuery = 'SELECT COUNT(*) AS count FROM users WHERE email = ? AND uuid != ?';
   db.query(checkEmailQuery, [email, user_uuid], (err, result) => {
     if (err) {
@@ -331,22 +379,25 @@ app.post('/api/profile', upload.fields([]), (req, res) => {
         email = ?, 
         country_code = ?, 
         phone = ?, 
-        address = ?
+        address = ?,
+        imagen = ?
       WHERE uuid = ?
     `;
     db.query(
       updateUserQuery,
-      [first_name, last_name, email, validCountryCode, phone, address, user_uuid],
+      [first_name, last_name, email, validCountryCode, phone, address, imagen, user_uuid],
       (err2) => {
         if (err2) {
           console.error('Error al actualizar el perfil:', err2);
           return res.status(500).json({ error: 'Error al actualizar el perfil' });
         }
-        return res.json({ message: 'Perfil actualizado correctamente' });
+        return res.json({ message: 'Perfil actualizado correctamente', imagen });
       }
     );
   });
 });
+
+
 
 // [7] Endpoint para obtener el first_name del usuario
 app.get('/api/user-profile', (req, res) => {
@@ -354,7 +405,8 @@ app.get('/api/user-profile', (req, res) => {
   if (!user_uuid) {
     return res.status(400).json({ error: 'Se requiere user_uuid' });
   }
-  const query = 'SELECT first_name FROM users WHERE uuid = ?';
+  // Seleccionamos los campos que necesitamos, incluyendo la imagen
+  const query = 'SELECT first_name, last_name, email, phone, address, imagen FROM users WHERE uuid = ? LIMIT 1';
   db.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo el perfil:', err);
@@ -366,6 +418,7 @@ app.get('/api/user-profile', (req, res) => {
     return res.json(results[0]);
   });
 });
+
 
 // [8] Endpoint para cambiar la contraseña
 app.post('/api/change-password', (req, res) => {
@@ -1912,6 +1965,10 @@ app.post('/api/carriers', (req, res) => {
 
 
 
+// ──────────────────────────────────────────────────────────
+// GET /api/productos
+// ──────────────────────────────────────────────────────────
+// Ej: /api/productos?user_uuid=xxx&busqueda=...&categoria=...
 app.get('/api/productos', (req, res) => {
   const {
     busqueda,
@@ -1920,10 +1977,10 @@ app.get('/api/productos', (req, res) => {
     precio_min,
     precio_max,
     stock_min,
-    stock_max
+    stock_max,
+    user_uuid,
   } = req.query;
 
-  // Construir el WHERE dinámico sin el filtro de usuario
   let whereClauses = [];
   let values = [];
 
@@ -1956,7 +2013,15 @@ app.get('/api/productos', (req, res) => {
     values.push(stock_max);
   }
 
-  const whereString = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
+  // Para mostrar sólo los productos de un usuario:
+  if (user_uuid) {
+    whereClauses.push('user_uuid = ?');
+    values.push(user_uuid);
+  }
+
+  const whereString = whereClauses.length
+    ? 'WHERE ' + whereClauses.join(' AND ')
+    : '';
 
   const query = `
     SELECT
@@ -1967,7 +2032,8 @@ app.get('/api/productos', (req, res) => {
       precio_proveedor,
       precio_sugerido,
       stock,
-      imagen
+      imagen,
+      user_uuid
     FROM productos
     ${whereString}
     ORDER BY id DESC
@@ -1978,88 +2044,187 @@ app.get('/api/productos', (req, res) => {
       console.error('Error obteniendo productos:', err);
       return res.status(500).json({ error: 'Error al obtener productos' });
     }
+    // Devolvemos el array (aunque sea vacío)
     res.json(results);
   });
 });
 
+// ──────────────────────────────────────────────────────────
+// POST /api/productos (Crear producto con imagen opcional)
+// ──────────────────────────────────────────────────────────
+app.post('/api/productos', upload.single('imagen'), (req, res) => {
+  try {
+    const {
+      nombre,
+      categoria,
+      proveedor,
+      precio_proveedor,
+      precio_sugerido,
+      stock,
+      user_uuid,
+    } = req.body;
 
+    // Si se subió un archivo, construimos la ruta
+    let imagen = null;
+    if (req.file) {
+      imagen = `../../backend/public/uploads/${req.file.filename}`;
+    }
 
+    // Validar campos obligatorios
+    if (
+      !nombre ||
+      !categoria ||
+      !proveedor ||
+      precio_proveedor == null ||
+      precio_sugerido == null ||
+      stock == null ||
+      !user_uuid
+    ) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios o user_uuid.' });
+    }
 
+    const insertQuery = `
+      INSERT INTO productos (
+        nombre,
+        categoria,
+        proveedor,
+        precio_proveedor,
+        precio_sugerido,
+        stock,
+        imagen,
+        user_uuid
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-app.post('/api/productos', (req, res) => {
-  const {
-    nombre,
-    categoria,
-    proveedor,
-    precio_proveedor,
-    precio_sugerido,
-    stock,
-    imagen
-  } = req.body;
+    db.query(
+      insertQuery,
+      [
+        nombre,
+        categoria,
+        proveedor,
+        precio_proveedor,
+        precio_sugerido,
+        stock,
+        imagen,
+        user_uuid,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error('Error al insertar producto:', err);
+          return res.status(500).json({ error: 'Error al insertar producto' });
+        }
+        return res.json({
+          message: 'Producto creado exitosamente',
+          id_producto: result.insertId,
+          imagen,
+        });
+      }
+    );
+  } catch (error) {
+    console.error('Error en POST /api/productos:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
 
-  if (!nombre || !categoria || !proveedor || precio_proveedor == null || precio_sugerido == null || stock == null || !imagen) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+// ──────────────────────────────────────────────────────────
+// PUT /api/productos/:id (Actualizar con imagen opcional)
+// ──────────────────────────────────────────────────────────
+app.put('/api/productos/:id', upload.single('imagen'), (req, res) => {
+  try {
+    const {
+      nombre,
+      categoria,
+      proveedor,
+      precio_proveedor,
+      precio_sugerido,
+      stock,
+      user_uuid,
+    } = req.body;
+
+    // Si se subió un archivo, construimos la ruta
+    let imagen = null;
+    if (req.file) {
+      imagen = `../../backend/public/uploads/${req.file.filename}`;
+    }
+
+    if (
+      !nombre ||
+      !categoria ||
+      !proveedor ||
+      precio_proveedor == null ||
+      precio_sugerido == null ||
+      stock == null ||
+      !user_uuid
+    ) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios o user_uuid.' });
+    }
+
+    // Construimos la query
+    let updateQuery = `
+      UPDATE productos
+      SET nombre = ?, categoria = ?, proveedor = ?, precio_proveedor = ?, precio_sugerido = ?, stock = ?
+    `;
+    const values = [
+      nombre,
+      categoria,
+      proveedor,
+      precio_proveedor,
+      precio_sugerido,
+      stock,
+    ];
+
+    if (imagen) {
+      updateQuery += `, imagen = ?`;
+      values.push(imagen);
+    }
+
+    updateQuery += ` WHERE id = ? AND user_uuid = ?`;
+    values.push(req.params.id, user_uuid);
+
+    db.query(updateQuery, values, (err, result) => {
+      if (err) {
+        console.error('Error al actualizar producto:', err);
+        return res.status(500).json({ error: 'Error al actualizar producto' });
+      }
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ error: 'Producto no encontrado o no pertenece al usuario' });
+      }
+      res.json({ message: 'Producto actualizado correctamente', imagen });
+    });
+  } catch (error) {
+    console.error('Error en PUT /api/productos/:id:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────
+// (Opcional) DELETE /api/productos/:id
+// ──────────────────────────────────────────────────────────
+// Si quisieras soportar borrado
+app.delete('/api/productos/:id', (req, res) => {
+  const { id } = req.params;
+  const { user_uuid } = req.body || req.query; // O donde lo envíes
+
+  if (!user_uuid) {
+    return res.status(400).json({ error: 'Falta user_uuid para eliminar' });
   }
 
-  const insertQuery = `
-    INSERT INTO productos (
-      nombre,
-      categoria,
-      proveedor,
-      precio_proveedor,
-      precio_sugerido,
-      stock,
-      imagen
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  db.query(
-    insertQuery,
-    [nombre, categoria, proveedor, precio_proveedor, precio_sugerido, stock, imagen],
-    (err, result) => {
-      if (err) {
-        console.error('Error al insertar producto:', err);
-        return res.status(500).json({ error: 'Error al insertar producto' });
-      }
-      return res.json({
-        message: 'Producto creado exitosamente',
-        id_producto: result.insertId
-      });
-    }
-  );
-});
-
-
-
-
-// Endpoint para obtener un producto por su ID
-app.get('/api/productos/:id', (req, res) => {
-  const { id } = req.params;
-  const query = `
-    SELECT 
-      id,
-      nombre,
-      categoria,
-      proveedor,
-      precio_proveedor,
-      precio_sugerido,
-      stock,
-      imagen
-    FROM productos
-    WHERE id = ?
-  `;
-  db.query(query, [id], (err, results) => {
+  const query = `DELETE FROM productos WHERE id = ? AND user_uuid = ?`;
+  db.query(query, [id, user_uuid], (err, result) => {
     if (err) {
-      console.error('Error obteniendo el producto:', err);
-      return res.status(500).json({ error: 'Error al obtener el producto' });
+      console.error('Error al eliminar producto:', err);
+      return res.status(500).json({ error: 'Error al eliminar producto' });
     }
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ error: 'Producto no encontrado o no pertenece al usuario' });
     }
-    res.json(results[0]);
+    res.json({ message: 'Producto eliminado correctamente' });
   });
 });
-
 
 app.get('/api/user-role', (req, res) => {
   console.log('Llamada a /api/user-role con query:', req.query);
@@ -2125,62 +2290,142 @@ app.get('/api/admin-role', (req, res) => {
   });
 });
 
-
 // ============================
 // ENDPOINTS PARA LA TIENDA
 // ============================
 
-// POST: Crear una tienda (global)
-app.post('/api/stores', (req, res) => {
-  const { name, categories } = req.body;
+// Crear tienda
+app.post('/api/stores', uploadSuppliers.single('logo'), (req, res) => {
+  const { name, categories, user_uuid, user_id } = req.body;
 
-  // Validar campos obligatorios
-  if (!name || !categories) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios (name y categories).' });
+  // Validar campos
+  if (!name || !categories || !user_uuid || !user_id) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios (name, categories, user_uuid, user_id).' });
+  }
+
+  // Si se subió un archivo, armamos la ruta
+  let imagen = null;
+  if (req.file) {
+    // Ruta accesible desde frontend => /suppliers/lo_que_guarde_multer
+    imagen = '../../backend/public/suppliers/' + req.file.filename;
   }
 
   const insertQuery = `
-    INSERT INTO stores (name, categories)
-    VALUES (?, ?)
+    INSERT INTO stores (name, categories, user_uuid, user_id, activacion, imagen, created_at)
+    VALUES (?, ?, ?, ?, 1, ?, NOW())
   `;
+
   db.query(
     insertQuery,
-    [name, categories],
+    [name, categories, user_uuid, user_id, imagen],
     (err, result) => {
       if (err) {
-        console.error('Error al insertar tienda:', err);
-        return res.status(500).json({ error: 'Error al insertar tienda' });
+        console.error('Error al crear tienda:', err);
+        return res.status(500).json({ error: 'Error interno al crear la tienda' });
       }
-      console.log('Tienda insertada correctamente, ID:', result.insertId);
-      return res.status(201).json({
-        message: 'Tienda creada correctamente',
-        storeId: result.insertId,
+      // Devolver la tienda creada (con ID y la ruta de imagen)
+      const newStoreId = result.insertId;
+      const selectQuery = 'SELECT * FROM stores WHERE id = ? LIMIT 1';
+      db.query(selectQuery, [newStoreId], (err2, rows) => {
+        if (err2) {
+          console.error('Error al obtener la tienda creada:', err2);
+          return res.status(500).json({ error: 'Error al obtener la tienda creada' });
+        }
+        if (rows.length === 0) {
+          return res.status(404).json({ error: 'No se encontró la tienda recién creada' });
+        }
+        res.status(201).json(rows[0]);
       });
     }
   );
 });
 
-// GET: Obtener todas las tiendas (global)
+
+
+// Obtener todas las tiendas (o filtrar según user_uuid si así lo deseas)
 app.get('/api/stores', (req, res) => {
-  const query = 'SELECT * FROM stores ORDER BY created_at DESC';
-  db.query(query, (err, results) => {
+  const { user_uuid } = req.query;
+
+  let sql = 'SELECT * FROM stores';
+  let params = [];
+
+  if (user_uuid) {
+    sql += ' WHERE user_uuid = ?';
+    params.push(user_uuid);
+  }
+
+  db.query(sql, params, (err, rows) => {
     if (err) {
       console.error('Error al obtener tiendas:', err);
-      return res.status(500).json({ error: 'Error al obtener tiendas' });
+      return res.status(500).json({ error: 'Error interno del servidor' });
     }
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'No hay tiendas disponibles' });
-    }
-    res.json(results);
+    res.json(rows);
   });
 });
 
 
+// Actualizar activación de una tienda
+app.put('/api/stores/:id/activacion', (req, res) => {
+  const { activacion } = req.body;
+  const storeId = req.params.id;
+
+  if (![0, 1].includes(activacion)) {
+    return res.status(400).json({ error: 'El estado de activación solo puede ser 0 o 1' });
+  }
+
+  const sql = 'UPDATE stores SET activacion = ? WHERE id = ?';
+
+  db.query(sql, [activacion, storeId], (err, result) => {
+    if (err) {
+      console.error('Error al actualizar activación:', err);
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+    res.json({ message: 'Estado de activación actualizado correctamente' });
+  });
+});
 
 
+// Ejemplo de endpoint para obtener el user_id a partir de un uuid
+app.get('/api/user-info', async (req, res) => {
+  try {
+    const { uuid } = req.query;
+    if (!uuid) {
+      return res.status(400).json({ error: 'Se requiere el uuid del usuario' });
+    }
 
+    // Consulta a la tabla 'users' para obtener el id y cualquier otro dato que necesites
+    const query = `
+      SELECT id, first_name, last_name, email, role_id
+      FROM users
+      WHERE uuid = ?
+      LIMIT 1
+    `;
 
+    db.query(query, [uuid], (err, results) => {
+      if (err) {
+        console.error('Error obteniendo el usuario por uuid:', err);
+        return res.status(500).json({ error: 'Error interno del servidor' });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
 
+      // results[0] debería tener la fila con el id
+      const userRow = results[0];
+      // Retornamos un objeto con el id y lo que quieras
+      return res.json({
+        id: userRow.id,
+        first_name: userRow.first_name,
+        last_name: userRow.last_name,
+        email: userRow.email,
+        role_id: userRow.role_id
+      });
+    });
+  } catch (error) {
+    console.error('Error en /api/user-info:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
 
 // ============================
 // INICIAR SERVER
