@@ -337,35 +337,17 @@ export function Catalogo() {
             <option>Stock: Mayor a Menor</option>
           </select>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-600">Vista:</span>
-          <button
-            onClick={() => setModoVista('cuadricula')}
-            className={`p-2 rounded-lg ${
-              modoVista === 'cuadricula' ? 'bg-primary-light text-primary' : 'text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <Grid size={20} />
-          </button>
-          <button
-            onClick={() => setModoVista('lista')}
-            className={`p-2 rounded-lg ${
-              modoVista === 'lista' ? 'bg-primary-light text-primary' : 'text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <List size={20} />
-          </button>
-        </div>
       </div>
 
       {/* Grid o lista de productos */}
       <div
-        className={
-          modoVista === 'cuadricula'
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-            : 'space-y-4'
-        }
-      >
+  className={
+    modoVista === 'cuadricula'
+      ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6'
+      : 'space-y-4'
+  }
+>
+
         {productos.map((producto) => (
           <div
             key={producto.id}
@@ -389,33 +371,62 @@ export function Catalogo() {
               </button>
             </div>
             <div className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-500">{producto.categoria}</span>
-                <span className="text-sm font-medium text-gray-700">Stock {producto.stock}</span>
-              </div>
-              <h3 className="font-medium text-gray-900 mb-2">{producto.nombre}</h3>
-              <div className="space-y-1 mb-4">
-                <div className="text-sm text-gray-500">
-                  Proveedor:{' '}
-                  <span className="font-medium text-gray-700">{producto.proveedor}</span>
-                </div>
-                <div className="text-sm text-gray-500">
-                  Precio proveedor:{' '}
-                  <span className="font-medium text-gray-700">
-                    PEN {Number(producto.precio_proveedor).toFixed(2)}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-500">
-                  Precio sugerido:{' '}
-                  <span className="font-medium text-gray-700">
-                    PEN {Number(producto.precio_sugerido).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-              <button className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors duration-200">
-                Enviar a cliente
-              </button>
-            </div>
+  <div className="flex items-center justify-between mb-2">
+    <span className="text-sm text-gray-500">{producto.categoria}</span>
+    <span className="text-xs text-gray-700">Stock <span className="text-sm font-bold text-green-500"> 
+    {producto.stock}</span></span>
+
+  </div>
+  
+  <h3 className="font-medium text-gray-900 mb-2 flex justify-center">{producto.nombre}</h3>
+  
+  <div className="space-y-1 mb-4 text-center">
+    <div className="text-sm text-gray-500 flex justify-start">
+      Proveedor:{' '}
+      <span className="font-medium text-primary-dark ">{producto.proveedor}</span>
+    </div>
+    
+    <div className="flex  items-center justify-center gap-1">
+      <div className="text-xs text-gray-500">
+        Proveedor:{' '}
+        <span className="font-medium text-base text-gray-700">
+          ${Number(producto.precio_proveedor).toFixed(2)}
+        </span>
+      </div>
+      
+      <div className="text-xs text-gray-500">
+        Variable:{' '}
+        <span className="font-bold text-xl text-gray-700">
+          ${Number(producto.precio_sugerido).toFixed(2)}
+        </span>
+      </div>
+    </div>
+  </div>
+  
+  <hr />
+
+  <button className="flex items-center justify-center gap-2 text-primary font-bold text-base mt-4 w-full">
+    <svg
+      width="21"
+      height="21"
+      viewBox="0 0 21 21"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <mask id="mask0_1412_90" maskUnits="userSpaceOnUse" x="0" y="0" width="21" height="21">
+        <rect x="0.5" y="0.325195" width="20" height="20" fill="#D9D9D9"></rect>
+      </mask>
+      <g mask="url(#mask0_1412_90)">
+        <path
+          d="M10.5 8.3252L9.4375 7.2627L10.625 6.0752H7.5V4.5752H10.625L9.4375 3.3877L10.5 2.3252L13.5 5.3252L10.5 8.3252ZM5.99558 18.3252C5.58186 18.3252 5.22917 18.1779 4.9375 17.8833C4.64583 17.5887 4.5 17.2345 4.5 16.8208C4.5 16.4071 4.64731 16.0544 4.94192 15.7627C5.23654 15.471 5.59071 15.3252 6.00442 15.3252C6.41814 15.3252 6.77083 15.4725 7.0625 15.7671C7.35417 16.0617 7.5 16.4159 7.5 16.8296C7.5 17.2433 7.35269 17.596 7.05808 17.8877C6.76346 18.1794 6.40929 18.3252 5.99558 18.3252ZM14.9956 18.3252C14.5819 18.3252 14.2292 18.1779 13.9375 17.8833C13.6458 17.5887 13.5 17.2345 13.5 16.8208C13.5 16.4071 13.6473 16.0544 13.9419 15.7627C14.2365 15.471 14.5907 15.3252 15.0044 15.3252C15.4181 15.3252 15.7708 15.4725 16.0625 15.7671C16.3542 16.0617 16.5 16.4159 16.5 16.8296C16.5 17.2433 16.3527 17.596 16.0581 17.8877C15.7635 18.1794 15.4093 18.3252 14.9956 18.3252ZM1.5 3.8252V2.3252H4.27083L7.5 9.8252H13.7708L16.125 4.3252H17.75L15.1458 10.4085C15.0208 10.6863 14.8368 10.9085 14.5938 11.0752C14.3507 11.2419 14.0764 11.3252 13.7708 11.3252H7.10417L6.22917 12.8252H16.5V14.3252H6.25C5.66667 14.3252 5.22917 14.0717 4.9375 13.5648C4.64583 13.0578 4.64583 12.5613 4.9375 12.0752L6.02083 10.2002L3.29167 3.8252H1.5Z"
+          fill="#005f7e"
+        ></path>
+      </g>
+    </svg>
+    Enviar a cliente
+  </button>
+</div>
+
           </div>
         ))}
       </div>
