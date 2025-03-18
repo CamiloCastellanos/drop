@@ -43,7 +43,7 @@ export function StoreSettings() {
                 </label>
                 <input
                   type="email"
-                  defaultValue="alexanderjesusnievesmontilva@gmail.com"
+                  defaultValue=""
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
                   readOnly
                 />
