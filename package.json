@@ -8,7 +8,7 @@
   "homepage": "https://dropi.co.alexcode.org/",
     "scripts": {
       "dev": "vite",
-      "build": "vite build",
+"build": "vite build --outDir dist",
       "preview": "vite preview"
     }
   ,
