@@ -73,21 +73,29 @@ app.use('../../backend/public/profile', express.static(path.join(__dirname, 'pub
 // ──────────────────────────────────────────────────────────
 // 2) CONEXIÓN A LA BASE DE DATOS
 // ──────────────────────────────────────────────────────────
-const db = mysql.createConnection({
+const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   port: process.env.DB_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10, // Puedes ajustar según tu necesidad
+  queueLimit: 0,
 });
 
-db.connect((err) => {
+// Verificar conexión
+pool.getConnection((err, connection) => {
   if (err) {
     console.error('Error de conexión a la base de datos:', err);
     return;
   }
   console.log('Conexión exitosa a la base de datos');
+  connection.release(); // Liberamos la conexión al pool
 });
+
+// Exportamos el pool para usarlo en los endpoints
+module.exports = pool;
 
 // =====================================================
 // ===============     ENDPOINTS      ==================
@@ -98,7 +106,7 @@ app.post('/api/register', async (req, res) => {
   try {
     const { firstName, lastName, phone, countryCode, email, password, role } = req.body;
     const roleQuery = 'SELECT id FROM roles WHERE name = ? LIMIT 1';
-    db.query(roleQuery, [role], async (err, roleResults) => {
+    pool.query(roleQuery, [role], async (err, roleResults) => {
       if (err) {
         console.error('Error obteniendo el rol:', err);
         return res.status(500).json({ error: 'Error al obtener el rol' });
@@ -115,7 +123,7 @@ app.post('/api/register', async (req, res) => {
           created_at, updated_at, status
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 'OFF')
       `;
-      db.query(
+      pool.query(
         insertUserQuery,
         [userUuid, firstName, lastName, countryCode, phone, email, hashedPassword, roleId],
         (err, result) => {
@@ -125,7 +133,7 @@ app.post('/api/register', async (req, res) => {
           }
           // Actualizar el status a ON después de registrar
           const updateStatusQuery = `UPDATE users SET status = 'ON' WHERE id = ?`;
-          db.query(updateStatusQuery, [result.insertId], (err) => {
+          pool.query(updateStatusQuery, [result.insertId], (err) => {
             if (err) {
               console.error('Error actualizando el status a ON:', err);
               return res.status(500).json({ error: 'Error al actualizar el estado del usuario' });
@@ -159,7 +167,7 @@ app.post('/api/login', (req, res) => {
     LIMIT 1
   `;
 
-  db.query(selectQuery, [email], async (err, results) => {
+  pool.query(selectQuery, [email], async (err, results) => {
     if (err) {
       console.error('Error en la consulta de login:', err);
       return res.status(500).json({ error: 'Error en el servidor' });
@@ -181,7 +189,7 @@ app.post('/api/login', (req, res) => {
 
     // Actualizar last_login y status
     const updateLastLoginQuery = `UPDATE users SET last_login = NOW() WHERE id = ?`;
-    db.query(updateLastLoginQuery, [user.id], (err) => {
+    pool.query(updateLastLoginQuery, [user.id], (err) => {
       if (err) {
         console.error('Error al actualizar last_login:', err);
         return res.status(500).json({ error: 'Error al actualizar la hora de inicio de sesión' });
@@ -189,7 +197,7 @@ app.post('/api/login', (req, res) => {
     });
 
     const updateStatusQuery = `UPDATE users SET status = 'ON' WHERE id = ?`;
-    db.query(updateStatusQuery, [user.id], (err) => {
+    pool.query(updateStatusQuery, [user.id], (err) => {
       if (err) {
         console.error('Error actualizando el status a ON:', err);
         return res.status(500).json({ error: 'Error al actualizar el estado del usuario' });
@@ -210,7 +218,7 @@ app.post('/api/login', (req, res) => {
       ORDER BY date_time_login DESC
       LIMIT 1
     `;
-    db.query(checkSessionQuery, [user.uuid, browser, os], (checkErr, checkResults) => {
+    pool.query(checkSessionQuery, [user.uuid, browser, os], (checkErr, checkResults) => {
       if (checkErr) {
         console.error('Error al verificar sesión existente:', checkErr);
         // Si falla la verificación, procedemos a insertar una nueva sesión
@@ -222,7 +230,7 @@ app.post('/api/login', (req, res) => {
         const sessionId = checkResults[0].id;
         console.log('Sesión existente encontrada, ID:', sessionId);
         const updateSessionQuery = `UPDATE sesiones SET date_time_login = NOW() WHERE id = ?`;
-        db.query(updateSessionQuery, [sessionId], (updateErr) => {
+        pool.query(updateSessionQuery, [sessionId], (updateErr) => {
           if (updateErr) {
             console.error('Error al actualizar sesión existente:', updateErr);
           } else {
@@ -251,7 +259,7 @@ app.post('/api/login', (req, res) => {
           os
         ) VALUES (?, NOW(), ?, ?)
       `;
-      db.query(
+      pool.query(
         insertSessionQuery,
         [user.uuid, browser, os],
         (sessErr, sessResult) => {
@@ -278,7 +286,7 @@ app.post('/api/login', (req, res) => {
 app.delete('/api/sessions/:id', (req, res) => {
   const { id } = req.params;
   const query = 'DELETE FROM sesiones WHERE id = ?';
-  db.query(query, [id], (err, result) => {
+  pool.query(query, [id], (err, result) => {
     if (err) {
       console.error('Error al borrar la sesión:', err);
       return res.status(500).json({ error: 'Error al borrar la sesión' });
@@ -298,7 +306,7 @@ app.post('/api/logout', (req, res) => {
     return res.status(400).json({ error: 'Se requiere user_uuid para logout' });
   }
   const deleteSessionQuery = 'DELETE FROM sesiones WHERE user_uuid = ?';
-  db.query(deleteSessionQuery, [user_uuid], (err) => {
+  pool.query(deleteSessionQuery, [user_uuid], (err) => {
     if (err) {
       console.error('Error borrando sesiones:', err);
       return res.status(500).json({ error: 'Error al borrar sesiones' });
@@ -318,7 +326,7 @@ app.get('/api/users', (req, res) => {
     FROM users
     INNER JOIN roles ON users.role_id = roles.id
   `;
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       return res.status(500).json({ error: 'Error en la consulta' });
     }
@@ -338,7 +346,7 @@ app.get('/api/user', (req, res) => {
     WHERE uuid = ?
     LIMIT 1
   `;
-  db.query(query, [uuid], (err, results) => {
+  pool.query(query, [uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo datos del usuario:', err);
       return res.status(500).json({ error: 'Error al obtener datos del usuario' });
@@ -362,7 +370,7 @@ app.post('/api/profile', uploadProfile.single('profile_image'), (req, res) => {
     imagen = `../../backend/public/profile/${req.file.filename}`;
   }
   const checkEmailQuery = 'SELECT COUNT(*) AS count FROM users WHERE email = ? AND uuid != ?';
-  db.query(checkEmailQuery, [email, user_uuid], (err, result) => {
+  pool.query(checkEmailQuery, [email, user_uuid], (err, result) => {
     if (err) {
       console.error('Error al verificar el email:', err);
       return res.status(500).json({ error: 'Error al verificar el email' });
@@ -383,7 +391,7 @@ app.post('/api/profile', uploadProfile.single('profile_image'), (req, res) => {
         imagen = ?
       WHERE uuid = ?
     `;
-    db.query(
+    pool.query(
       updateUserQuery,
       [first_name, last_name, email, validCountryCode, phone, address, imagen, user_uuid],
       (err2) => {
@@ -407,7 +415,7 @@ app.get('/api/user-profile', (req, res) => {
   }
   // Seleccionamos los campos que necesitamos, incluyendo la imagen
   const query = 'SELECT first_name, last_name, email, phone, address, imagen FROM users WHERE uuid = ? LIMIT 1';
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo el perfil:', err);
       return res.status(500).json({ error: 'Error en la base de datos' });
@@ -427,7 +435,7 @@ app.post('/api/change-password', (req, res) => {
     return res.status(400).json({ error: 'Todos los campos son requeridos.' });
   }
   const checkPasswordQuery = 'SELECT password FROM users WHERE uuid = ?';
-  db.query(checkPasswordQuery, [user_uuid], (err, result) => {
+  pool.query(checkPasswordQuery, [user_uuid], (err, result) => {
     if (err) {
       console.error('Error al verificar la contraseña:', err);
       return res.status(500).json({ error: 'Error al verificar la contraseña' });
@@ -450,7 +458,7 @@ app.post('/api/change-password', (req, res) => {
           return res.status(500).json({ error: 'Error al hashear la contraseña' });
         }
         const updatePasswordQuery = 'UPDATE users SET password = ? WHERE uuid = ?';
-        db.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
+        pool.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
           if (err4) {
             console.error('Error al actualizar la contraseña:', err4);
             return res.status(500).json({ error: 'Error al actualizar la contraseña' });
@@ -465,7 +473,7 @@ app.post('/api/change-password', (req, res) => {
 // [GET] Endpoint para productos
 app.get('/api/products', (req, res) => {
   const query = 'SELECT * FROM products';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo productos:', err);
       return res.status(500).json({ error: 'Error obteniendo productos' });
@@ -477,7 +485,7 @@ app.get('/api/products', (req, res) => {
 // [9] Endpoint para obtener departamentos
 app.get('/api/departments', (req, res) => {
   const query = 'SELECT id, name FROM departamentos';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo los departamentos:', err);
       return res.status(500).json({ error: 'Error obteniendo los departamentos' });
@@ -490,7 +498,7 @@ app.get('/api/departments', (req, res) => {
 app.get('/api/cities/:departmentId', (req, res) => {
   const { departmentId } = req.params;
   const query = 'SELECT id, nombre FROM ciudades WHERE departamento_id = ?';
-  db.query(query, [departmentId], (err, results) => {
+  pool.query(query, [departmentId], (err, results) => {
     if (err) {
       console.error('Error obteniendo las ciudades:', err);
       return res.status(500).json({ error: 'Error al obtener ciudades' });
@@ -528,7 +536,7 @@ app.post('/api/clients', (req, res) => {
   console.log('User UUID recibido:', user_uuid);
 
   const checkQuery = `SELECT COUNT(*) AS count FROM clientes WHERE correo = ?`;
-  db.query(checkQuery, [email], (checkErr, checkResults) => {
+  pool.query(checkQuery, [email], (checkErr, checkResults) => {
     if (checkErr) {
       console.error('Error verificando correo:', checkErr);
       return res.status(500).json({ error: 'Error al verificar el correo.' });
@@ -554,7 +562,7 @@ app.post('/api/clients', (req, res) => {
         fecha_registro
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
-    db.query(
+    pool.query(
       insertClientQuery,
       [
         name,
@@ -615,7 +623,7 @@ app.get('/api/clients', (req, res) => {
     WHERE c.user_uuid = ?
     ORDER BY c.id DESC
   `;
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo clientes:', err);
       return res.status(500).json({ error: 'Error al obtener clientes' });
@@ -654,7 +662,7 @@ app.put('/api/clients/:id', (req, res) => {
       ciudad_id = ?
     WHERE id = ?
   `;
-  db.query(
+  pool.query(
     updateQuery,
     [
       nombre,
@@ -688,7 +696,7 @@ app.put('/api/clients/:id', (req, res) => {
 app.delete('/api/clients/:id', (req, res) => {
   const { id } = req.params;
   const query = 'DELETE FROM clientes WHERE id = ?';
-  db.query(query, [id], (err, result) => {
+  pool.query(query, [id], (err, result) => {
     if (err) {
       console.error('Error al borrar cliente:', err);
       return res.status(500).json({ error: 'Error al borrar cliente' });
@@ -716,7 +724,7 @@ app.get('/api/sessions', (req, res) => {
     WHERE user_uuid = ?
     ORDER BY date_time_login DESC
   `;
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo sesiones:', err);
       return res.status(500).json({ error: 'Error al obtener sesiones' });
@@ -732,7 +740,7 @@ app.post('/api/change-password', (req, res) => {
     return res.status(400).json({ error: 'Todos los campos son requeridos.' });
   }
   const checkPasswordQuery = 'SELECT password FROM users WHERE uuid = ?';
-  db.query(checkPasswordQuery, [user_uuid], (err, result) => {
+  pool.query(checkPasswordQuery, [user_uuid], (err, result) => {
     if (err) {
       console.error('Error al verificar la contraseña:', err);
       return res.status(500).json({ error: 'Error al verificar la contraseña' });
@@ -755,7 +763,7 @@ app.post('/api/change-password', (req, res) => {
           return res.status(500).json({ error: 'Error al hashear la contraseña' });
         }
         const updatePasswordQuery = 'UPDATE users SET password = ? WHERE uuid = ?';
-        db.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
+        pool.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
           if (err4) {
             console.error('Error al actualizar la contraseña:', err4);
             return res.status(500).json({ error: 'Error al actualizar la contraseña' });
@@ -770,7 +778,7 @@ app.post('/api/change-password', (req, res) => {
 // [GET] Endpoint para productos
 app.get('/api/products', (req, res) => {
   const query = 'SELECT * FROM products';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo productos:', err);
       return res.status(500).json({ error: 'Error obteniendo productos' });
@@ -782,7 +790,7 @@ app.get('/api/products', (req, res) => {
 // [9] Endpoint para obtener departamentos
 app.get('/api/departments', (req, res) => {
   const query = 'SELECT id, name FROM departamentos';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo los departamentos:', err);
       return res.status(500).json({ error: 'Error obteniendo los departamentos' });
@@ -795,7 +803,7 @@ app.get('/api/departments', (req, res) => {
 app.get('/api/cities/:departmentId', (req, res) => {
   const { departmentId } = req.params;
   const query = 'SELECT id, nombre FROM ciudades WHERE departamento_id = ?';
-  db.query(query, [departmentId], (err, results) => {
+  pool.query(query, [departmentId], (err, results) => {
     if (err) {
       console.error('Error obteniendo las ciudades:', err);
       return res.status(500).json({ error: 'Error al obtener ciudades' });
@@ -833,7 +841,7 @@ app.post('/api/clients', (req, res) => {
   console.log('User UUID recibido:', user_uuid);
 
   const checkQuery = `SELECT COUNT(*) AS count FROM clientes WHERE correo = ?`;
-  db.query(checkQuery, [email], (checkErr, checkResults) => {
+  pool.query(checkQuery, [email], (checkErr, checkResults) => {
     if (checkErr) {
       console.error('Error verificando correo:', checkErr);
       return res.status(500).json({ error: 'Error al verificar el correo.' });
@@ -859,7 +867,7 @@ app.post('/api/clients', (req, res) => {
         fecha_registro
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
-    db.query(
+    pool.query(
       insertClientQuery,
       [
         name,
@@ -920,7 +928,7 @@ app.get('/api/clients', (req, res) => {
     WHERE c.user_uuid = ?
     ORDER BY c.id DESC
   `;
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo clientes:', err);
       return res.status(500).json({ error: 'Error al obtener clientes' });
@@ -959,7 +967,7 @@ app.put('/api/clients/:id', (req, res) => {
       ciudad_id = ?
     WHERE id = ?
   `;
-  db.query(
+  pool.query(
     updateQuery,
     [
       nombre,
@@ -993,7 +1001,7 @@ app.put('/api/clients/:id', (req, res) => {
 app.delete('/api/clients/:id', (req, res) => {
   const { id } = req.params;
   const query = 'DELETE FROM clientes WHERE id = ?';
-  db.query(query, [id], (err, result) => {
+  pool.query(query, [id], (err, result) => {
     if (err) {
       console.error('Error al borrar cliente:', err);
       return res.status(500).json({ error: 'Error al borrar cliente' });
@@ -1021,7 +1029,7 @@ app.get('/api/sessions', (req, res) => {
     WHERE user_uuid = ?
     ORDER BY date_time_login DESC
   `;
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo sesiones:', err);
       return res.status(500).json({ error: 'Error al obtener sesiones' });
@@ -1037,7 +1045,7 @@ app.post('/api/change-password', (req, res) => {
     return res.status(400).json({ error: 'Todos los campos son requeridos.' });
   }
   const checkPasswordQuery = 'SELECT password FROM users WHERE uuid = ?';
-  db.query(checkPasswordQuery, [user_uuid], (err, result) => {
+  pool.query(checkPasswordQuery, [user_uuid], (err, result) => {
     if (err) {
       console.error('Error al verificar la contraseña:', err);
       return res.status(500).json({ error: 'Error al verificar la contraseña' });
@@ -1060,7 +1068,7 @@ app.post('/api/change-password', (req, res) => {
           return res.status(500).json({ error: 'Error al hashear la contraseña' });
         }
         const updatePasswordQuery = 'UPDATE users SET password = ? WHERE uuid = ?';
-        db.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
+        pool.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
           if (err4) {
             console.error('Error al actualizar la contraseña:', err4);
             return res.status(500).json({ error: 'Error al actualizar la contraseña' });
@@ -1075,7 +1083,7 @@ app.post('/api/change-password', (req, res) => {
 // [GET] Endpoint para productos
 app.get('/api/products', (req, res) => {
   const query = 'SELECT * FROM products';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo productos:', err);
       return res.status(500).json({ error: 'Error obteniendo productos' });
@@ -1087,7 +1095,7 @@ app.get('/api/products', (req, res) => {
 // [9] Endpoint para obtener departamentos
 app.get('/api/departments', (req, res) => {
   const query = 'SELECT id, name FROM departamentos';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo los departamentos:', err);
       return res.status(500).json({ error: 'Error obteniendo los departamentos' });
@@ -1100,7 +1108,7 @@ app.get('/api/departments', (req, res) => {
 app.get('/api/cities/:departmentId', (req, res) => {
   const { departmentId } = req.params;
   const query = 'SELECT id, nombre FROM ciudades WHERE departamento_id = ?';
-  db.query(query, [departmentId], (err, results) => {
+  pool.query(query, [departmentId], (err, results) => {
     if (err) {
       console.error('Error obteniendo las ciudades:', err);
       return res.status(500).json({ error: 'Error al obtener ciudades' });
@@ -1138,7 +1146,7 @@ app.post('/api/clients', (req, res) => {
   console.log('User UUID recibido:', user_uuid);
 
   const checkQuery = `SELECT COUNT(*) AS count FROM clientes WHERE correo = ?`;
-  db.query(checkQuery, [email], (checkErr, checkResults) => {
+  pool.query(checkQuery, [email], (checkErr, checkResults) => {
     if (checkErr) {
       console.error('Error verificando correo:', checkErr);
       return res.status(500).json({ error: 'Error al verificar el correo.' });
@@ -1164,7 +1172,7 @@ app.post('/api/clients', (req, res) => {
         fecha_registro
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
-    db.query(
+    pool.query(
       insertClientQuery,
       [
         name,
@@ -1225,7 +1233,7 @@ app.get('/api/clients', (req, res) => {
     WHERE c.user_uuid = ?
     ORDER BY c.id DESC
   `;
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo clientes:', err);
       return res.status(500).json({ error: 'Error al obtener clientes' });
@@ -1264,7 +1272,7 @@ app.put('/api/clients/:id', (req, res) => {
       ciudad_id = ?
     WHERE id = ?
   `;
-  db.query(
+  pool.query(
     updateQuery,
     [
       nombre,
@@ -1298,7 +1306,7 @@ app.put('/api/clients/:id', (req, res) => {
 app.delete('/api/clients/:id', (req, res) => {
   const { id } = req.params;
   const query = 'DELETE FROM clientes WHERE id = ?';
-  db.query(query, [id], (err, result) => {
+  pool.query(query, [id], (err, result) => {
     if (err) {
       console.error('Error al borrar cliente:', err);
       return res.status(500).json({ error: 'Error al borrar cliente' });
@@ -1326,7 +1334,7 @@ app.get('/api/sessions', (req, res) => {
     WHERE user_uuid = ?
     ORDER BY date_time_login DESC
   `;
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo sesiones:', err);
       return res.status(500).json({ error: 'Error al obtener sesiones' });
@@ -1342,7 +1350,7 @@ app.post('/api/change-password', (req, res) => {
     return res.status(400).json({ error: 'Todos los campos son requeridos.' });
   }
   const checkPasswordQuery = 'SELECT password FROM users WHERE uuid = ?';
-  db.query(checkPasswordQuery, [user_uuid], (err, result) => {
+  pool.query(checkPasswordQuery, [user_uuid], (err, result) => {
     if (err) {
       console.error('Error al verificar la contraseña:', err);
       return res.status(500).json({ error: 'Error al verificar la contraseña' });
@@ -1365,7 +1373,7 @@ app.post('/api/change-password', (req, res) => {
           return res.status(500).json({ error: 'Error al hashear la contraseña' });
         }
         const updatePasswordQuery = 'UPDATE users SET password = ? WHERE uuid = ?';
-        db.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
+        pool.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
           if (err4) {
             console.error('Error al actualizar la contraseña:', err4);
             return res.status(500).json({ error: 'Error al actualizar la contraseña' });
@@ -1380,7 +1388,7 @@ app.post('/api/change-password', (req, res) => {
 // [GET] Endpoint para productos
 app.get('/api/products', (req, res) => {
   const query = 'SELECT * FROM products';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo productos:', err);
       return res.status(500).json({ error: 'Error obteniendo productos' });
@@ -1392,7 +1400,7 @@ app.get('/api/products', (req, res) => {
 // [9] Endpoint para obtener departamentos
 app.get('/api/departments', (req, res) => {
   const query = 'SELECT id, name FROM departamentos';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo los departamentos:', err);
       return res.status(500).json({ error: 'Error obteniendo los departamentos' });
@@ -1405,7 +1413,7 @@ app.get('/api/departments', (req, res) => {
 app.get('/api/cities/:departmentId', (req, res) => {
   const { departmentId } = req.params;
   const query = 'SELECT id, nombre FROM ciudades WHERE departamento_id = ?';
-  db.query(query, [departmentId], (err, results) => {
+  pool.query(query, [departmentId], (err, results) => {
     if (err) {
       console.error('Error obteniendo las ciudades:', err);
       return res.status(500).json({ error: 'Error al obtener ciudades' });
@@ -1443,7 +1451,7 @@ app.post('/api/clients', (req, res) => {
   console.log('User UUID recibido:', user_uuid);
 
   const checkQuery = `SELECT COUNT(*) AS count FROM clientes WHERE correo = ?`;
-  db.query(checkQuery, [email], (checkErr, checkResults) => {
+  pool.query(checkQuery, [email], (checkErr, checkResults) => {
     if (checkErr) {
       console.error('Error verificando correo:', checkErr);
       return res.status(500).json({ error: 'Error al verificar el correo.' });
@@ -1469,7 +1477,7 @@ app.post('/api/clients', (req, res) => {
         fecha_registro
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
-    db.query(
+    pool.query(
       insertClientQuery,
       [
         name,
@@ -1530,7 +1538,7 @@ app.get('/api/clients', (req, res) => {
     WHERE c.user_uuid = ?
     ORDER BY c.id DESC
   `;
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo clientes:', err);
       return res.status(500).json({ error: 'Error al obtener clientes' });
@@ -1569,7 +1577,7 @@ app.put('/api/clients/:id', (req, res) => {
       ciudad_id = ?
     WHERE id = ?
   `;
-  db.query(
+  pool.query(
     updateQuery,
     [
       nombre,
@@ -1603,7 +1611,7 @@ app.put('/api/clients/:id', (req, res) => {
 app.delete('/api/clients/:id', (req, res) => {
   const { id } = req.params;
   const query = 'DELETE FROM clientes WHERE id = ?';
-  db.query(query, [id], (err, result) => {
+  pool.query(query, [id], (err, result) => {
     if (err) {
       console.error('Error al borrar cliente:', err);
       return res.status(500).json({ error: 'Error al borrar cliente' });
@@ -1631,7 +1639,7 @@ app.get('/api/sessions', (req, res) => {
     WHERE user_uuid = ?
     ORDER BY date_time_login DESC
   `;
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo sesiones:', err);
       return res.status(500).json({ error: 'Error al obtener sesiones' });
@@ -1648,7 +1656,7 @@ app.post('/api/change-password', (req, res) => {
     return res.status(400).json({ error: 'Todos los campos son requeridos.' });
   }
   const checkPasswordQuery = 'SELECT password FROM users WHERE uuid = ?';
-  db.query(checkPasswordQuery, [user_uuid], (err, result) => {
+  pool.query(checkPasswordQuery, [user_uuid], (err, result) => {
     if (err) {
       console.error('Error al verificar la contraseña:', err);
       return res.status(500).json({ error: 'Error al verificar la contraseña' });
@@ -1671,7 +1679,7 @@ app.post('/api/change-password', (req, res) => {
           return res.status(500).json({ error: 'Error al hashear la contraseña' });
         }
         const updatePasswordQuery = 'UPDATE users SET password = ? WHERE uuid = ?';
-        db.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
+        pool.query(updatePasswordQuery, [hashedPassword, user_uuid], (err4) => {
           if (err4) {
             console.error('Error al actualizar la contraseña:', err4);
             return res.status(500).json({ error: 'Error al actualizar la contraseña' });
@@ -1686,7 +1694,7 @@ app.post('/api/change-password', (req, res) => {
 // [GET] Endpoint para productos
 app.get('/api/products', (req, res) => {
   const query = 'SELECT * FROM products';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo productos:', err);
       return res.status(500).json({ error: 'Error obteniendo productos' });
@@ -1698,7 +1706,7 @@ app.get('/api/products', (req, res) => {
 // [9] Endpoint para obtener departamentos
 app.get('/api/departments', (req, res) => {
   const query = 'SELECT id, name FROM departamentos';
-  db.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Error obteniendo los departamentos:', err);
       return res.status(500).json({ error: 'Error obteniendo los departamentos' });
@@ -1711,7 +1719,7 @@ app.get('/api/departments', (req, res) => {
 app.get('/api/cities/:departmentId', (req, res) => {
   const { departmentId } = req.params;
   const query = 'SELECT id, nombre FROM ciudades WHERE departamento_id = ?';
-  db.query(query, [departmentId], (err, results) => {
+  pool.query(query, [departmentId], (err, results) => {
     if (err) {
       console.error('Error obteniendo las ciudades:', err);
       return res.status(500).json({ error: 'Error al obtener ciudades' });
@@ -1751,7 +1759,7 @@ app.post('/api/retiros', (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(
+  pool.query(
     insertQuery,
     [
       monto,
@@ -1803,7 +1811,7 @@ app.get('/api/retiros', (req, res) => {
     ORDER BY fecha_solicitud DESC
   `;
 
-  db.query(selectQuery, [user_uuid], (err, results) => {
+  pool.query(selectQuery, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error al obtener retiros:', err);
       return res.status(500).json({ error: 'Error al obtener retiros' });
@@ -1843,7 +1851,7 @@ app.post('/api/addbank', (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(
+  pool.query(
     insertQuery,
     [country, bank, identification_type, identification_number, account_type, interbank_number, user_uuid],
     (err, result) => {
@@ -1884,7 +1892,7 @@ app.get('/api/addbank', (req, res) => {
     ORDER BY id DESC
   `;
 
-  db.query(selectQuery, [user_uuid], (err, results) => {
+  pool.query(selectQuery, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error al obtener cuentas bancarias:', err);
       return res.status(500).json({ error: 'Error al obtener cuentas bancarias' });
@@ -1908,7 +1916,7 @@ app.get('/api/carriers', (req, res) => {
     WHERE user_uuid = ?
     ORDER BY carrier_order ASC
   `;
-  db.query(query, [user_uuid], (err, results) => {
+  pool.query(query, [user_uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo carriers:', err);
       return res.status(500).json({ error: 'Error al obtener carriers' });
@@ -1931,7 +1939,7 @@ app.post('/api/carriers', (req, res) => {
 
   // Borramos los carriers existentes del usuario
   const deleteQuery = `DELETE FROM carriers_order WHERE user_uuid = ?`;
-  db.query(deleteQuery, [user_uuid], (delErr) => {
+  pool.query(deleteQuery, [user_uuid], (delErr) => {
     if (delErr) {
       console.error('Error al borrar carriers previos:', delErr);
       return res.status(500).json({ error: 'Error al borrar carriers previos' });
@@ -1944,7 +1952,7 @@ app.post('/api/carriers', (req, res) => {
     `;
     // Construimos un array de promesas para insertar cada carrier
     const inserts = carriers.map((c) => new Promise((resolve, reject) => {
-      db.query(insertQuery, [user_uuid, c.name, c.order], (insErr) => {
+      pool.query(insertQuery, [user_uuid, c.name, c.order], (insErr) => {
         if (insErr) return reject(insErr);
         resolve(true);
       });
@@ -2039,7 +2047,7 @@ app.get('/api/productos', (req, res) => {
     ORDER BY id DESC
   `;
 
-  db.query(query, values, (err, results) => {
+  pool.query(query, values, (err, results) => {
     if (err) {
       console.error('Error obteniendo productos:', err);
       return res.status(500).json({ error: 'Error al obtener productos' });
@@ -2096,7 +2104,7 @@ app.post('/api/productos', upload.single('imagen'), (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(
+    pool.query(
       insertQuery,
       [
         nombre,
@@ -2181,7 +2189,7 @@ app.put('/api/productos/:id', upload.single('imagen'), (req, res) => {
     updateQuery += ` WHERE id = ? AND user_uuid = ?`;
     values.push(req.params.id, user_uuid);
 
-    db.query(updateQuery, values, (err, result) => {
+    pool.query(updateQuery, values, (err, result) => {
       if (err) {
         console.error('Error al actualizar producto:', err);
         return res.status(500).json({ error: 'Error al actualizar producto' });
@@ -2212,7 +2220,7 @@ app.delete('/api/productos/:id', (req, res) => {
   }
 
   const query = `DELETE FROM productos WHERE id = ? AND user_uuid = ?`;
-  db.query(query, [id, user_uuid], (err, result) => {
+  pool.query(query, [id, user_uuid], (err, result) => {
     if (err) {
       console.error('Error al eliminar producto:', err);
       return res.status(500).json({ error: 'Error al eliminar producto' });
@@ -2243,7 +2251,7 @@ app.get('/api/user-role', (req, res) => {
   `;
   
   console.log('Ejecutando consulta con uuid:', uuid);
-  db.query(query, [uuid], (err, results) => {
+  pool.query(query, [uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo el rol del usuario:', err);
       return res.status(500).json({ error: 'Error al obtener el rol' });
@@ -2276,7 +2284,7 @@ app.get('/api/admin-role', (req, res) => {
   `;
 
   console.log('Ejecutando consulta para ADMIN con uuid:', uuid);
-  db.query(query, [uuid], (err, results) => {
+  pool.query(query, [uuid], (err, results) => {
     if (err) {
       console.error('Error obteniendo el rol del usuario (ADMIN):', err);
       return res.status(500).json({ error: 'Error al obtener el rol' });
@@ -2315,7 +2323,7 @@ app.post('/api/stores', uploadSuppliers.single('logo'), (req, res) => {
     VALUES (?, ?, ?, ?, 1, ?, NOW())
   `;
 
-  db.query(
+  pool.query(
     insertQuery,
     [name, categories, user_uuid, user_id, imagen],
     (err, result) => {
@@ -2326,7 +2334,7 @@ app.post('/api/stores', uploadSuppliers.single('logo'), (req, res) => {
       // Devolver la tienda creada (con ID y la ruta de imagen)
       const newStoreId = result.insertId;
       const selectQuery = 'SELECT * FROM stores WHERE id = ? LIMIT 1';
-      db.query(selectQuery, [newStoreId], (err2, rows) => {
+      pool.query(selectQuery, [newStoreId], (err2, rows) => {
         if (err2) {
           console.error('Error al obtener la tienda creada:', err2);
           return res.status(500).json({ error: 'Error al obtener la tienda creada' });
@@ -2354,7 +2362,7 @@ app.get('/api/stores', (req, res) => {
     params.push(user_uuid);
   }
 
-  db.query(sql, params, (err, rows) => {
+  pool.query(sql, params, (err, rows) => {
     if (err) {
       console.error('Error al obtener tiendas:', err);
       return res.status(500).json({ error: 'Error interno del servidor' });
@@ -2375,7 +2383,7 @@ app.put('/api/stores/:id/activacion', (req, res) => {
 
   const sql = 'UPDATE stores SET activacion = ? WHERE id = ?';
 
-  db.query(sql, [activacion, storeId], (err, result) => {
+  pool.query(sql, [activacion, storeId], (err, result) => {
     if (err) {
       console.error('Error al actualizar activación:', err);
       return res.status(500).json({ error: 'Error interno del servidor' });
@@ -2401,7 +2409,7 @@ app.get('/api/user-info', async (req, res) => {
       LIMIT 1
     `;
 
-    db.query(query, [uuid], (err, results) => {
+    pool.query(query, [uuid], (err, results) => {
       if (err) {
         console.error('Error obteniendo el usuario por uuid:', err);
         return res.status(500).json({ error: 'Error interno del servidor' });
