@@ -25,7 +25,7 @@ export function CarrierPreferences() {
       console.error('No se encontró user_uuid en localStorage');
       return;
     }
-    fetch(`/api/carriers?user_uuid=${userUUID}`)
+    fetch(`https://dropi.co.alexcode.org/api/carriers?user_uuid=${userUUID}`)
       .then((res) => res.json())
       .then((data) => {
         // data: [{ name: 'EVACOURIER', order: 1 }, { name: 'URBANO', order: 2 } ...]
@@ -82,7 +82,7 @@ export function CarrierPreferences() {
       order: c.order
     }));
 
-    fetch('/api/carriers', {
+    fetch('https://dropi.co.alexcode.org/api/carriers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_uuid: userUUID, carriers: payloadCarriers })

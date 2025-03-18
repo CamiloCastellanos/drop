@@ -20,7 +20,7 @@ export function DetalleProducto() {
 
   React.useEffect(() => {
     // Obtener detalles del producto mediante su ID
-    fetch(`/api/productos/${id}`)
+    fetch(`https://dropi.co.alexcode.org/api/productos/${id}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error('Error al obtener los detalles del producto');

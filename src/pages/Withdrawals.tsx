@@ -44,7 +44,7 @@ export function Withdrawals() {
       console.error('No se encontró user_uuid en localStorage');
       return;
     }
-    fetch(`/api/retiros?user_uuid=${userUUID}`)
+    fetch(`https://dropi.co.alexcode.org/api/retiros?user_uuid=${userUUID}`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -81,7 +81,7 @@ export function Withdrawals() {
     };
 
     // Llamar a POST /api/retiros
-    fetch('/api/retiros', {
+    fetch('https://dropi.co.alexcode.org/api/retiros', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

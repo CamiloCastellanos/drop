@@ -30,7 +30,7 @@ export function Vendedor(): JSX.Element {
   const fetchUserID = async () => {
     if (!userUUID) return;
     try {
-      const res = await axios.get(`/api/user-info?uuid=${userUUID}`);
+      const res = await axios.get(`https://dropi.co.alexcode.org/api/user-info?uuid=${userUUID}`);
       if (res.data?.id) {
         localStorage.setItem('user_id', String(res.data.id));
         setUserID(String(res.data.id));
@@ -106,7 +106,7 @@ export function Vendedor(): JSX.Element {
   useEffect(() => {
     if (!userUUID) return;
     axios
-      .get(`/api/stores?user_uuid=${userUUID}`)
+      .get(`https://dropi.co.alexcode.org/api/stores?user_uuid=${userUUID}`)
       .then((res) => {
         if (Array.isArray(res.data) && res.data.length > 0) {
           const tienda = res.data[0];
@@ -189,7 +189,7 @@ export function Vendedor(): JSX.Element {
         sendData.append('logo', logoFile);
       }
 
-      const response = await axios.post('/api/stores', sendData, {
+      const response = await axios.post('https://dropi.co.alexcode.org/api/stores', sendData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       Swal.fire('¡Tienda creada!', 'La tienda se ha creado correctamente.', 'success');
@@ -206,7 +206,7 @@ export function Vendedor(): JSX.Element {
   // -------------------------------------------------------------------
   const fetchProductos = () => {
     axios
-      .get(`/api/productos?user_uuid=${userUUID}`)
+      .get(`https://dropi.co.alexcode.org/api/productos?user_uuid=${userUUID}`)
       .then((res) => {
         setProductos(res.data || []);
       })
@@ -282,7 +282,7 @@ export function Vendedor(): JSX.Element {
 
     // Forzamos el proveedor = store.name
     axios
-      .post('/api/productos', {
+      .post('https://dropi.co.alexcode.org/api/productos', {
         nombre,
         categoria,
         proveedor: store?.name,
@@ -344,7 +344,7 @@ export function Vendedor(): JSX.Element {
 
     // Forzamos el proveedor = store.name
     axios
-      .put(`/api/productos/${editingProduct.id}`, {
+      .put(`https://dropi.co.alexcode.org/api/productos/${editingProduct.id}`, {
         nombre,
         categoria,
         proveedor: store?.name,
@@ -378,7 +378,7 @@ export function Vendedor(): JSX.Element {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`/api/productos/${prod.id}`)
+          .delete(`https://dropi.co.alexcode.org/api/productos/${prod.id}`)
           .then(() => {
             Swal.fire('Eliminado', 'El producto ha sido eliminado', 'success');
             fetchProductos();

@@ -47,7 +47,7 @@ export function UserMenu() {
           throw new Error('UUID de usuario no encontrado');
         }
         console.log('UUID del usuario:', user_uuid);
-        const response = await axios.get(`/api/user-profile?user_uuid=${user_uuid}`);
+        const response = await axios.get(`https://dropi.co.alexcode.org/api/user-profile?user_uuid=${user_uuid}`);
         console.log('Respuesta de la API:', response.data);
         if (response.data.first_name) {
           setFirstName(response.data.first_name);
@@ -150,7 +150,7 @@ export function UserMenu() {
       return;
     }
     try {
-      const response = await axios.post('/api/change-password', {
+      const response = await axios.post('https://dropi.co.alexcode.org/api/change-password', {
         user_uuid: localStorage.getItem('user_uuid'),
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,

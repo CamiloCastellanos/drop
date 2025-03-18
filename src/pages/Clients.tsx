@@ -87,7 +87,7 @@ export function Clients() {
     const userUUID = localStorage.getItem('user_uuid');
     console.log('User UUID obtenido:', userUUID);
 
-    fetch(`/api/clients?user_uuid=${userUUID}`)
+    fetch(`https://dropi.co.alexcode.org/api/clients?user_uuid=${userUUID}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -105,7 +105,7 @@ export function Clients() {
   // useEffect: Cargar departamentos
   // ========================
   React.useEffect(() => {
-    fetch('/api/departments')
+    fetch('https://dropi.co.alexcode.org/api/departments')
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! Status: ${res.status}`);
@@ -138,7 +138,7 @@ export function Clients() {
   // ========================
   const handleDepartmentChange = (deptId: string) => {
     setFormData({ ...formData, department: deptId, city: '' });
-    fetch(`/api/cities/${deptId}`)
+    fetch(`https://dropi.co.alexcode.org/api/cities/${deptId}`)
       .then((res) => res.json())
       .then((data) => {
         console.log('Ciudades (form):', data);
@@ -156,7 +156,7 @@ export function Clients() {
       user_uuid: userUUID,
     };
 
-    fetch('/api/clients', {
+    fetch('https://dropi.co.alexcode.org/api/clients', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -182,7 +182,7 @@ export function Clients() {
         setShowAddModal(false);
         // Recargar la lista de clientes
         const userUUIDReload = localStorage.getItem('user_uuid');
-        fetch(`/api/clients?user_uuid=${userUUIDReload}`)
+        fetch(`https://dropi.co.alexcode.org/api/clients?user_uuid=${userUUIDReload}`)
           .then((res2) => res2.json())
           .then((updatedData) => setClients(Array.isArray(updatedData) ? updatedData : []))
           .catch((err) => console.error('Error recargando clientes:', err));
@@ -204,7 +204,7 @@ export function Clients() {
     setEditingClientId(client.id);
     setEditingClientData({ ...client });
     if (client.departamento_id) {
-      fetch(`/api/cities/${client.departamento_id}`)
+      fetch(`https://dropi.co.alexcode.org/api/cities/${client.departamento_id}`)
         .then((res) => res.json())
         .then((data) => {
           console.log('Ciudades (edición):', data);
@@ -228,7 +228,7 @@ export function Clients() {
       departamento_id: Number(newDeptId),
       ciudad_id: 0,
     }));
-    fetch(`/api/cities/${newDeptId}`)
+    fetch(`https://dropi.co.alexcode.org/api/cities/${newDeptId}`)
       .then((res) => res.json())
       .then((data) => {
         console.log('Ciudades (nuevo dept en edición):', data);
@@ -238,7 +238,7 @@ export function Clients() {
   };
 
   const handleUpdateClient = () => {
-    fetch(`/api/clients/${editingClientId}`, {
+    fetch(`https://dropi.co.alexcode.org/api/clients/${editingClientId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editingClientData),
@@ -290,7 +290,7 @@ export function Clients() {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`/api/clients/${clientId}`, { method: 'DELETE' })
+        fetch(`https://dropi.co.alexcode.org/api/clients/${clientId}`, { method: 'DELETE' })
           .then((res) => {
             if (!res.ok) {
               throw new Error(`HTTP error! status: ${res.status}`);

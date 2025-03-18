@@ -73,7 +73,7 @@ export function Layout({ children }: LayoutProps) {
   useEffect(() => {
     if (currentUser?.uuid) {
       console.log('[Layout] UUID del usuario:', currentUser.uuid);
-      fetch(`/api/user-role?uuid=${currentUser.uuid}`)
+      fetch(`https://dropi.co.alexcode.org/api/user-role?uuid=${currentUser.uuid}`)
         .then((res) => res.json())
         .then((data) => {
           console.log('[Layout] Respuesta del backend:', data);

@@ -65,7 +65,7 @@ export function Catalogo() {
     if (rangoStock.min) params.append('stock_min', rangoStock.min);
     if (rangoStock.max) params.append('stock_max', rangoStock.max);
 
-    fetch(`/api/productos?${params.toString()}`)
+    fetch(`https://dropi.co.alexcode.org/api/productos?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {

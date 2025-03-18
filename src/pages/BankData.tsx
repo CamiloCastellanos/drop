@@ -71,7 +71,7 @@ export function BankData() {
       console.error('No se encontró user_uuid en localStorage');
       return;
     }
-    fetch(`/api/addbank?user_uuid=${userUUID}`)
+    fetch(`https://dropi.co.alexcode.org/api/addbank?user_uuid=${userUUID}`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -117,7 +117,7 @@ export function BankData() {
     };
 
     // POST /api/addbank
-    fetch('/api/addbank', {
+    fetch('https://dropi.co.alexcode.org/api/addbank', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

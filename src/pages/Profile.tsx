@@ -29,7 +29,7 @@ export function Profile(): JSX.Element {
         return;
       }
       try {
-        const response = await fetch(`/api/user?uuid=${userUuid}`);
+        const response = await fetch(`https://dropi.co.alexcode.org/api/user?uuid=${userUuid}`);
         const data = await response.json();
         if (response.ok && data) {
           console.log('Datos obtenidos del servidor:', data);
@@ -93,7 +93,7 @@ export function Profile(): JSX.Element {
     }
 
     try {
-      const response = await fetch('/api/profile', {
+      const response = await fetch('https://dropi.co.alexcode.org/api/profile', {
         method: 'POST',
         headers: {
           // Usamos el UUID en el header Authorization para identificar al usuario

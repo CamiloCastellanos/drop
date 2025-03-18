@@ -19,7 +19,7 @@ export function Suppliers() {
 
   useEffect(() => {
     // Obtener las tiendas desde el backend
-    axios.get('/api/stores')
+    axios.get('https://dropi.co.alexcode.org/api/stores')
       .then(async (response) => {
         const rawStores: Store[] = response.data;
         // Enriquecer cada tienda con la cantidad de productos
@@ -29,7 +29,7 @@ export function Suppliers() {
               return { ...st, productCount: 0 };
             }
             try {
-              const resProducts = await axios.get(`/api/productos?user_uuid=${st.user_uuid}`);
+              const resProducts = await axios.get(`https://dropi.co.alexcode.org/api/productos?user_uuid=${st.user_uuid}`);
               const productCount = Array.isArray(resProducts.data)
                 ? resProducts.data.length
                 : 0;

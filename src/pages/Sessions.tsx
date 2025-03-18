@@ -27,7 +27,7 @@ export function Sessions() {
     }).then((result) => {
       if (result.isConfirmed) {
         console.log("Enviando solicitud DELETE para la sesión:", sessionId);
-        fetch(`/api/sessions/${sessionId}`, {
+        fetch(`https://dropi.co.alexcode.org/api/sessions/${sessionId}`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
         })
@@ -69,8 +69,8 @@ export function Sessions() {
       console.error('No se encontró user_uuid en localStorage');
       return;
     }
-    console.log('Iniciando fetch a /api/sessions?user_uuid=' + userUUID);
-    fetch(`/api/sessions?user_uuid=${userUUID}`)
+    console.log('Iniciando fetch a https://dropi.co.alexcode.org/api/sessions?user_uuid=' + userUUID);
+    fetch(`https://dropi.co.alexcode.org/api/sessions?user_uuid=${userUUID}`)
       .then((res) => {
         console.log('Respuesta del servidor (sessions):', res);
         return res.json();
