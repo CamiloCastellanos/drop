@@ -45,7 +45,7 @@ export function Dashboard() {
       icon: TrendingUp, 
       change: '+2%', 
       up: true,
-      color: 'bg-orange-100 text-orange-600'
+      color: 'bg-primary-light text-primary'
     }
   ];
 

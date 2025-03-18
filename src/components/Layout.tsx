@@ -37,6 +37,8 @@ import {
 import { LanguageSelector } from './LanguageSelector';
 import { UserMenu } from './UserMenu';
 import { useAuth } from '../hooks/useAuth';
+import logo from '../assets/logo.png';
+
 
 interface SubMenuItem {
   icon: React.ElementType;
@@ -254,11 +256,8 @@ export function Layout({ children }: LayoutProps) {
         `}
       >
         <div className="p-4 flex items-center justify-between">
-          <img
-            src="https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=100&q=80"
-            alt="Logo"
-            className="h-8 w-auto"
-          />
+        <img src={logo} alt="Logo" className="h-14 w-auto" />
+
           {isSidebarOpen && (
             <button
               onClick={() => setIsSidebarOpen(false)}
@@ -288,7 +287,7 @@ export function Layout({ children }: LayoutProps) {
                         size={20}
                         className={
                           location.pathname.startsWith(item.path)
-                            ? 'text-orange-600'
+                            ? 'text-primary'
                             : 'text-gray-500'
                         }
                       />
@@ -321,7 +320,7 @@ export function Layout({ children }: LayoutProps) {
                             size={18}
                             className={
                               location.pathname === subItem.path
-                                ? 'text-orange-600'
+                                ? 'text-primary'
                                 : 'text-gray-500'
                             }
                           />
@@ -351,7 +350,7 @@ export function Layout({ children }: LayoutProps) {
                     size={20}
                     className={
                       location.pathname === item.path
-                        ? 'text-orange-600'
+                        ? 'text-primary'
                         : 'text-gray-500'
                     }
                   />
@@ -393,7 +392,7 @@ export function Layout({ children }: LayoutProps) {
               <LanguageSelector />
               <button
                 onClick={() => navigate('/configuraciones/retiros')}
-                className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 whitespace-nowrap"
+                className="flex items-center px-4 py-2 bg-primary-dark text-white rounded-lg hover:bg-primary whitespace-nowrap"
               >
                 <Wallet size={20} className="mr-2" />
                 <span>0,00</span>

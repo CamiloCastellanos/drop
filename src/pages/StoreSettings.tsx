@@ -33,7 +33,7 @@ export function StoreSettings() {
                 <input
                   type="text"
                   placeholder="Nombre de la tienda"
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
                 />
               </div>
 
@@ -44,7 +44,7 @@ export function StoreSettings() {
                 <input
                   type="email"
                   defaultValue="alexanderjesusnievesmontilva@gmail.com"
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
                   readOnly
                 />
               </div>
@@ -59,7 +59,7 @@ export function StoreSettings() {
                 <input
                   type="text"
                   placeholder="Url de la Tienda"
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
                 />
               </div>
 
@@ -74,7 +74,7 @@ export function StoreSettings() {
                   <input
                     type="text"
                     placeholder="Teléfono de la tienda"
-                    className="w-full pl-10 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full pl-10 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
                   />
                 </div>
               </div>
@@ -101,7 +101,7 @@ export function StoreSettings() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Estado por defecto de nueva orden:
               </label>
-              <select className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <select className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark">
                 <option value="PENDIENTE">PENDIENTE</option>
                 <option value="PROCESANDO">PROCESANDO</option>
                 <option value="COMPLETADO">COMPLETADO</option>
@@ -136,7 +136,7 @@ export function StoreSettings() {
                 <input
                   type="email"
                   placeholder="Email de autenticación"
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
                 />
               </div>
 
@@ -147,7 +147,7 @@ export function StoreSettings() {
                 <div className="flex space-x-2">
                   <select
                     defaultValue="57"
-                    className="w-24 px-2 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-24 px-2 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
                   >
                     <option value="57">🇨🇴 57</option>
                     <option value="51">🇵🇪 51</option>
@@ -156,7 +156,7 @@ export function StoreSettings() {
                   <input
                     type="tel"
                     placeholder="Número de teléfono"
-                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
                   />
                 </div>
               </div>

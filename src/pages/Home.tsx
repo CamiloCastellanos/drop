@@ -91,7 +91,7 @@ export function Home() {
                   <div className="text-2xl font-bold">{slides[currentSlide].event.date}</div>
                   <div className="text-xl">{slides[currentSlide].event.time}</div>
                 </div>
-                <button className="px-8 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors">
+                <button className="px-8 py-3 bg-primary-dark text-white rounded-full hover:bg-primary transition-colors">
                   ¡Conéctate aquí!
                 </button>
               </div>
@@ -118,8 +118,8 @@ export function Home() {
         {/* Warranty Module */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-semibold mb-4">Módulo de Garantías</h2>
-          <div className="aspect-video bg-orange-100 rounded-lg flex items-center justify-center">
-            <Shield size={48} className="text-orange-500" />
+          <div className="aspect-video bg-primary-light rounded-lg flex items-center justify-center">
+            <Shield size={48} className="text-primary-dark" />
           </div>
         </div>
       </div>
@@ -129,8 +129,8 @@ export function Home() {
         {/* Announcement Banner */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center space-x-6">
-            <div className="bg-orange-100 p-4 rounded-full flex-shrink-0">
-              <MessageSquare size={24} className="text-orange-500" />
+            <div className="bg-primary-light p-4 rounded-full flex-shrink-0">
+              <MessageSquare size={24} className="text-primary-dark" />
             </div>
             <p className="text-gray-600">
               Tu satisfacción es muy importante para nosotros, por eso, recientemente estuvimos
@@ -151,12 +151,12 @@ export function Home() {
             ].map((item, index) => (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-orange-100 p-2 rounded-lg">
-                    <item.icon size={20} className="text-orange-500" />
+                  <div className="bg-primary-light p-2 rounded-lg">
+                    <item.icon size={20} className="text-primary-dark" />
                   </div>
                   <span className="text-gray-700">{item.name}</span>
                 </div>
-                <button className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
+                <button className="px-4 py-2 bg-primary-dark text-white rounded-lg hover:bg-primary transition-colors">
                   Agendarme
                 </button>
               </div>

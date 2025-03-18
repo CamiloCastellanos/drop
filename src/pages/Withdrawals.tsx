@@ -135,7 +135,7 @@ export function Withdrawals() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
             />
           </div>
 
@@ -148,7 +148,7 @@ export function Withdrawals() {
               <select
                 value={selectedBank}
                 onChange={(e) => setSelectedBank(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark appearance-none bg-white"
               >
                 <option value="">Seleccionar banco</option>
                 {banks.map((bank, index) => (
@@ -175,7 +175,7 @@ export function Withdrawals() {
               value={account}
               onChange={(e) => setAccount(e.target.value)}
               placeholder="Número de cuenta"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
             />
           </div>
         </div>
@@ -191,7 +191,7 @@ export function Withdrawals() {
 
           <button
             onClick={handleProcess}
-            className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+            className="px-6 py-2 bg-primary-dark text-white rounded-lg hover:bg-primary"
           >
             Procesar
           </button>

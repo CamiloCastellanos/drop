@@ -154,7 +154,7 @@ export function Profile(): JSX.Element {
                   name="firstName"
                   value={userData.firstName}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div>
@@ -164,7 +164,7 @@ export function Profile(): JSX.Element {
                   name="lastName"
                   value={userData.lastName}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div>
@@ -174,7 +174,7 @@ export function Profile(): JSX.Element {
                   name="email"
                   value={userData.email}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div>
@@ -184,7 +184,7 @@ export function Profile(): JSX.Element {
                     <select
                       value={phoneCode}
                       onChange={(e) => setPhoneCode(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="57">🇨🇴 57</option>
                     </select>
@@ -194,7 +194,7 @@ export function Profile(): JSX.Element {
                     name="phone"
                     value={userData.phone}
                     onChange={handleChange}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -206,7 +206,7 @@ export function Profile(): JSX.Element {
                 name="address"
                 value={userData.address}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             {/* Mostrar logo actual o previsualización solo si hay imagen seleccionada o ya guardada */}

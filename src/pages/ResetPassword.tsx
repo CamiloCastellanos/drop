@@ -66,7 +66,7 @@ export function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-orange-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-primary-light flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
           <div className="text-center">
             <div className="flex justify-center mb-4">
@@ -83,7 +83,7 @@ export function ResetPassword() {
           </div>
 
           <div className="mt-8 text-center">
-            <Link to="/forgot-password" className="inline-flex items-center text-orange-600 hover:text-orange-500">
+            <Link to="/forgot-password" className="inline-flex items-center text-primary hover:text-primary-dark">
               <ArrowLeft size={16} className="mr-2" />
               Solicitar un nuevo enlace
             </Link>
@@ -99,12 +99,12 @@ export function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-orange-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-primary-light flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-primary-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
             </div>
@@ -128,7 +128,7 @@ export function ResetPassword() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-dark focus:border-primary-dark"
                   placeholder="Nueva contraseña"
                 />
                 <button
@@ -156,7 +156,7 @@ export function ResetPassword() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-dark focus:border-primary-dark"
                   placeholder="Confirmar contraseña"
                 />
                 <button
@@ -188,14 +188,14 @@ export function ResetPassword() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-dark"
             >
               {isLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
             </button>
           </div>
 
           <div className="text-center">
-            <Link to="/login" className="inline-flex items-center text-orange-600 hover:text-orange-500">
+            <Link to="/login" className="inline-flex items-center text-primary hover:text-primary-dark">
               <ArrowLeft size={16} className="mr-2" />
               Volver al inicio de sesión
             </Link>

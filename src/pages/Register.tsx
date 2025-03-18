@@ -114,12 +114,12 @@ export function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-orange-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-primary-light flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-primary-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
@@ -142,7 +142,7 @@ export function Register() {
                 required
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-dark focus:border-primary-dark"
               />
             </div>
 
@@ -156,7 +156,7 @@ export function Register() {
                 required
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-dark focus:border-primary-dark"
               />
             </div>
 
@@ -166,7 +166,7 @@ export function Register() {
               </label>
               <div className="mt-1 flex">
                 <select
-                  className="block w-20 px-3 py-2 border border-gray-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-20 px-3 py-2 border border-gray-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-primary-dark focus:border-primary-dark"
                   value={formData.countryCode}
                   onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
                 >
@@ -178,7 +178,7 @@ export function Register() {
                   required
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="flex-1 block w-full px-3 py-2 border border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  className="flex-1 block w-full px-3 py-2 border border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-primary-dark focus:border-primary-dark"
                   placeholder="Teléfono"
                 />
               </div>
@@ -194,7 +194,7 @@ export function Register() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-dark focus:border-primary-dark"
                 placeholder="Correo"
               />
             </div>
@@ -210,7 +210,7 @@ export function Register() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-dark focus:border-primary-dark"
                   placeholder="Contraseña"
                 />
                 <button
@@ -238,7 +238,7 @@ export function Register() {
                   required
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-dark focus:border-primary-dark"
                   placeholder="Confirmar contraseña"
                 />
                 <button
@@ -261,7 +261,7 @@ export function Register() {
                   type="radio"
                   checked={formData.role === 'DROPSHIPPER'}
                   onChange={() => setFormData({ ...formData, role: 'DROPSHIPPER' })}
-                  className="form-radio h-4 w-4 text-orange-600"
+                  className="form-radio h-4 w-4 text-primary"
                 />
                 <span className="ml-2">DROPSHIPPER</span>
               </label>
@@ -270,7 +270,7 @@ export function Register() {
                   type="radio"
                   checked={formData.role === 'PROVEEDOR / MARCA'}
                   onChange={() => setFormData({ ...formData, role: 'PROVEEDOR / MARCA' })}
-                  className="form-radio h-4 w-4 text-orange-600"
+                  className="form-radio h-4 w-4 text-primary"
                 />
                 <span className="ml-2">PROVEEDOR / MARCA</span>
               </label>
@@ -291,7 +291,7 @@ export function Register() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-dark"
             >
               {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </button>
@@ -300,7 +300,7 @@ export function Register() {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Ya tienes una cuenta?{' '}
-              <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500">
+              <Link to="/login" className="font-medium text-primary hover:text-primary-dark">
                 Login
               </Link>
             </p>

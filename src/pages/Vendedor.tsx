@@ -72,7 +72,7 @@ export function Vendedor(): JSX.Element {
     precio_proveedor: '',
     precio_sugerido: '',
     stock: '',
-    imagen: '',
+    imagenFile: null as File | null,
   });
 
   // Modal "Editar producto"
@@ -84,9 +84,9 @@ export function Vendedor(): JSX.Element {
     precio_proveedor: '',
     precio_sugerido: '',
     stock: '',
-    imagen: '',
+    imagenFile: null as File | null,
+    existingImagen: '',
   });
-
   // -------------------------------------------------------------------
   // Verificar userID y userUUID para habilitar la creación de tienda
   // -------------------------------------------------------------------
@@ -255,7 +255,7 @@ export function Vendedor(): JSX.Element {
       precio_proveedor: '',
       precio_sugerido: '',
       stock: '',
-      imagen: '',
+      imagenFile: null, // Usar imagenFile en lugar de imagen
     });
     setShowAddProductModal(true);
   };
@@ -265,42 +265,55 @@ export function Vendedor(): JSX.Element {
     setNewProductData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleAddProduct = () => {
-    const {
-      nombre,
-      categoria,
-      precio_proveedor,
-      precio_sugerido,
-      stock,
-      imagen,
-    } = newProductData;
+  // Handler para cambio de imagen en nuevo producto
+  const handleNewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setNewProductData(prev => ({
+        ...prev,
+        imagenFile: e.target.files![0]
+      }));
+    }
+  };
 
-    if (!nombre || !categoria || !precio_proveedor || !precio_sugerido || !stock) {
-      Swal.fire('Error', 'Todos los campos son obligatorios', 'error');
-      return;
+  // Handler para cambio de imagen en editar producto
+  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setEditProductData(prev => ({
+        ...prev,
+        imagenFile: e.target.files![0]
+      }));
+    }
+  };
+
+  // Modificar handleAddProduct para usar FormData
+  const handleAddProduct = () => {
+    const formData = new FormData();
+    formData.append('nombre', newProductData.nombre);
+    formData.append('categoria', newProductData.categoria);
+    formData.append('proveedor', store?.name);
+    formData.append('precio_proveedor', newProductData.precio_proveedor);
+    formData.append('precio_sugerido', newProductData.precio_sugerido);
+    formData.append('stock', newProductData.stock);
+    formData.append('user_uuid', userUUID);
+    
+    if (newProductData.imagenFile) {
+      formData.append('imagen', newProductData.imagenFile);
     }
 
-    // Forzamos el proveedor = store.name
-    axios
-      .post('https://dropi.co.alexcode.org/api/productos', {
-        nombre,
-        categoria,
-        proveedor: store?.name,
-        precio_proveedor: Number(precio_proveedor),
-        precio_sugerido: Number(precio_sugerido),
-        stock: Number(stock),
-        imagen,
-        user_uuid: userUUID,
-      })
-      .then(() => {
-        Swal.fire('Éxito', 'Producto creado exitosamente', 'success');
-        setShowAddProductModal(false);
-        fetchProductos();
-      })
-      .catch((err) => {
-        console.error('Error al crear producto:', err);
-        Swal.fire('Error', 'No se pudo crear el producto', 'error');
-      });
+    axios.post('https://dropi.co.alexcode.org/api/productos', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    .then(() => {
+      Swal.fire('Éxito', 'Producto creado exitosamente', 'success');
+      setShowAddProductModal(false);
+      fetchProductos();
+    })
+    .catch((err) => {
+      console.error('Error al crear producto:', err);
+      Swal.fire('Error', 'No se pudo crear el producto', 'error');
+    });
   };
 
   // Editar producto
@@ -312,7 +325,8 @@ export function Vendedor(): JSX.Element {
       precio_proveedor: String(prod.precio_proveedor),
       precio_sugerido: String(prod.precio_sugerido),
       stock: String(prod.stock),
-      imagen: prod.imagen,
+      imagenFile: null, // Inicializar imagenFile como null
+      existingImagen: prod.imagen, // Usar existingImagen para la imagen existente
     });
     setShowEditProductModal(true);
   };
@@ -325,46 +339,39 @@ export function Vendedor(): JSX.Element {
     setEditProductData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleUpdateProduct = () => {
-    if (!editingProduct) return;
+ // Modificar handleUpdateProduct para usar FormData
+ const handleUpdateProduct = () => {
+  if (!editingProduct) return;
 
-    const {
-      nombre,
-      categoria,
-      precio_proveedor,
-      precio_sugerido,
-      stock,
-      imagen,
-    } = editProductData;
+  const formData = new FormData();
+  formData.append('nombre', editProductData.nombre);
+  formData.append('categoria', editProductData.categoria);
+  formData.append('proveedor', store?.name);
+  formData.append('precio_proveedor', editProductData.precio_proveedor);
+  formData.append('precio_sugerido', editProductData.precio_sugerido);
+  formData.append('stock', editProductData.stock);
+  formData.append('user_uuid', userUUID);
 
-    if (!nombre || !categoria || !precio_proveedor || !precio_sugerido || !stock) {
-      Swal.fire('Error', 'Todos los campos son obligatorios', 'error');
-      return;
+  if (editProductData.imagenFile) {
+    formData.append('imagen', editProductData.imagenFile);
+  }
+
+  axios.put(`https://dropi.co.alexcode.org/api/productos/${editingProduct.id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
     }
-
-    // Forzamos el proveedor = store.name
-    axios
-      .put(`https://dropi.co.alexcode.org/api/productos/${editingProduct.id}`, {
-        nombre,
-        categoria,
-        proveedor: store?.name,
-        precio_proveedor: Number(precio_proveedor),
-        precio_sugerido: Number(precio_sugerido),
-        stock: Number(stock),
-        imagen,
-        user_uuid: userUUID,
-      })
-      .then(() => {
-        Swal.fire('Éxito', 'Producto actualizado', 'success');
-        setShowEditProductModal(false);
-        setEditingProduct(null);
-        fetchProductos();
-      })
-      .catch((err) => {
-        console.error('Error al actualizar producto:', err);
-        Swal.fire('Error', 'No se pudo actualizar el producto', 'error');
-      });
-  };
+  })
+  .then(() => {
+    Swal.fire('Éxito', 'Producto actualizado', 'success');
+    setShowEditProductModal(false);
+    setEditingProduct(null);
+    fetchProductos();
+  })
+  .catch((err) => {
+    console.error('Error al actualizar producto:', err);
+    Swal.fire('Error', 'No se pudo actualizar el producto', 'error');
+  });
+};
 
   // Eliminar producto
   const handleDeleteProduct = (prod: Producto) => {
@@ -756,26 +763,25 @@ export function Vendedor(): JSX.Element {
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Imagen (URL)
-                  </label>
-                  <input
-                    type="text"
-                    name="imagen"
-                    value={newProductData.imagen}
-                    onChange={handleNewProductChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                  />
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Imagen
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleNewImageChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                />
+              </div>
               </div>
               {/* Botón Guardar */}
               <div className="flex justify-end">
-                <button
-                  onClick={handleAddProduct}
-                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                >
-                  Guardar
-                </button>
+              <button
+                onClick={handleAddProduct}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                Guardar
+              </button>
               </div>
             </div>
           </div>
@@ -876,18 +882,18 @@ export function Vendedor(): JSX.Element {
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Imagen (URL)
-                  </label>
-                  <input
-                    type="text"
-                    name="imagen"
-                    value={editProductData.imagen}
-                    onChange={handleEditProductChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                  />
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Imagen
+                </label>
+                <input
+  type="file"
+  accept="image/*"
+  onChange={handleEditImageChange}
+  className="w-full px-3 py-2 border border-gray-300 rounded"
+/>
               </div>
+              </div>
+
               {/* Botón Actualizar */}
               <div className="flex justify-end">
                 <button

@@ -17,10 +17,10 @@ export function Products() {
           <input
             type="text"
             placeholder="Buscar productos..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-dark"
           />
         </div>
-        <button className="flex items-center justify-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+        <button className="flex items-center justify-center px-4 py-2 bg-primary-dark text-white rounded-lg hover:bg-primary">
           <Filter size={20} className="mr-2" />
           Filtros
         </button>
@@ -46,8 +46,8 @@ export function Products() {
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="bg-orange-100 p-2 rounded-lg mr-3">
-                        <Package size={20} className="text-orange-600" />
+                      <div className="bg-primary-light p-2 rounded-lg mr-3">
+                        <Package size={20} className="text-primary" />
                       </div>
                       <span className="font-medium">{product.name}</span>
                     </div>
@@ -64,7 +64,7 @@ export function Products() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button className="text-orange-600 hover:text-orange-900">Editar</button>
+                    <button className="text-primary hover:text-orange-900">Editar</button>
                   </td>
                 </tr>
               ))}

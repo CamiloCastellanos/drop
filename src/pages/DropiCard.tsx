@@ -11,7 +11,7 @@ export function DropiCard() {
 
       <div className="flex flex-col items-center justify-center max-w-lg mx-auto">
         {/* Virtual Card */}
-        <div className="w-full aspect-[1.586/1] bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-xl p-6 relative overflow-hidden mb-8">
+        <div className="w-full aspect-[1.586/1] bg-gradient-to-br from-primary-dark to-primary rounded-2xl shadow-xl p-6 relative overflow-hidden mb-8">
           {/* Card Background Pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
@@ -54,7 +54,7 @@ export function DropiCard() {
         </div>
 
         {/* Request Button */}
-        <button className="px-8 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200 font-medium text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+        <button className="px-8 py-3 bg-primary-dark text-white rounded-lg hover:bg-primary transition-colors duration-200 font-medium text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
           Solicitar Dropi Card
         </button>
 

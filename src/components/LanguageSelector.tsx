@@ -53,7 +53,7 @@ export function LanguageSelector() {
                 onClick={() => changeLanguage(language.code)}
                 className={`
                   w-full flex items-center px-4 py-2 text-sm
-                  ${language.code === currentLanguage.code ? 'bg-orange-50 text-orange-600' : 'text-gray-700 hover:bg-gray-50'}
+                  ${language.code === currentLanguage.code ? 'bg-orange-50 text-primary' : 'text-gray-700 hover:bg-gray-50'}
                 `}
               >
                 <span className="text-lg mr-2">{language.flag}</span>

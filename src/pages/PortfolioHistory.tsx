@@ -180,7 +180,7 @@ export function PortfolioHistory() {
             <Download size={20} className="mr-2" />
             Descargar en Excel
           </button>
-          <button className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+          <button className="flex items-center px-4 py-2 bg-primary-dark text-white rounded-lg hover:bg-primary">
             <ArrowRightLeft size={20} className="mr-2" />
             Transferencia entre wallets
           </button>

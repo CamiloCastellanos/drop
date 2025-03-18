@@ -104,10 +104,10 @@ export function DetailsProductos({ product, onBack }: DetailsProductosProps) {
 
           {/* Botones principales */}
           <div className="flex items-center gap-2">
-            <button className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
+            <button className="px-4 py-2 bg-primary-dark text-white rounded hover:bg-primary">
               Enviar al cliente
             </button>
-            <button className="px-4 py-2 bg-orange-100 text-orange-600 rounded hover:bg-orange-200">
+            <button className="px-4 py-2 bg-primary-light text-primary rounded hover:bg-orange-200">
               Solicitar muestra
             </button>
           </div>
@@ -146,7 +146,7 @@ export function DetailsProductos({ product, onBack }: DetailsProductosProps) {
                 onClick={() => setActiveTab('detalles')}
                 className={`px-4 py-2 text-sm focus:outline-none ${
                   activeTab === 'detalles'
-                    ? 'text-orange-600 border-b-2 border-orange-500'
+                    ? 'text-primary border-b-2 border-primary-dark'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -156,7 +156,7 @@ export function DetailsProductos({ product, onBack }: DetailsProductosProps) {
                 onClick={() => setActiveTab('garantias')}
                 className={`px-4 py-2 text-sm focus:outline-none ${
                   activeTab === 'garantias'
-                    ? 'text-orange-600 border-b-2 border-orange-500'
+                    ? 'text-primary border-b-2 border-primary-dark'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -166,7 +166,7 @@ export function DetailsProductos({ product, onBack }: DetailsProductosProps) {
                 onClick={() => setActiveTab('recursos')}
                 className={`px-4 py-2 text-sm focus:outline-none ${
                   activeTab === 'recursos'
-                    ? 'text-orange-600 border-b-2 border-orange-500'
+                    ? 'text-primary border-b-2 border-primary-dark'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >

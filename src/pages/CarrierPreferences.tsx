@@ -130,7 +130,7 @@ export function CarrierPreferences() {
                 className={`
                   flex items-center p-4 bg-white border border-gray-200 rounded-lg cursor-move
                   ${draggedCarrier?.name === carrier.name ? 'opacity-50' : ''}
-                  hover:border-orange-500 transition-colors duration-200
+                  hover:border-primary transition-colors duration-200
                 `}
               >
                 <div className="flex items-center flex-1 min-w-0">
@@ -154,7 +154,7 @@ export function CarrierPreferences() {
       <div className="flex justify-end">
         <button
           onClick={handleSave}
-          className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200"
+          className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors duration-200"
         >
           Guardar cambios
         </button>

@@ -69,13 +69,13 @@ export function Plans() {
             key={index}
             className={`relative rounded-2xl ${
               plan.popular
-                ? 'bg-white border-2 border-orange-500 shadow-xl scale-105 z-10'
+                ? 'bg-white border-2 border-primary-dark shadow-xl scale-105 z-10'
                 : 'bg-white border border-gray-200 shadow-lg'
             }`}
           >
             {plan.popular && (
               <div className="absolute -top-5 left-0 right-0 flex justify-center">
-                <div className="bg-orange-500 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center">
+                <div className="bg-primary-dark text-white px-4 py-1 rounded-full text-sm font-medium flex items-center">
                   <Star size={16} className="mr-1" />
                   Popular
                 </div>
@@ -94,7 +94,7 @@ export function Plans() {
               <button
                 className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
                   plan.popular
-                    ? 'bg-orange-500 text-white hover:bg-orange-600'
+                    ? 'bg-primary-dark text-white hover:bg-primary'
                     : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                 }`}
               >
@@ -105,7 +105,7 @@ export function Plans() {
                 {plan.features.map((feature, featureIndex) => (
                   <div key={featureIndex} className="flex items-start">
                     <Check size={20} className={`mr-3 flex-shrink-0 ${
-                      plan.popular ? 'text-orange-500' : 'text-gray-600'
+                      plan.popular ? 'text-primary-dark' : 'text-gray-600'
                     }`} />
                     <span className="text-gray-600">{feature}</span>
                   </div>
@@ -119,7 +119,7 @@ export function Plans() {
       <div className="text-center mt-12">
         <p className="text-gray-600">
           ¿Necesitas un plan personalizado?{' '}
-          <a href="#" className="text-orange-500 font-medium hover:text-orange-600">
+          <a href="#" className="text-primary-dark font-medium hover:text-primary">
             Contáctanos
           </a>
         </p>

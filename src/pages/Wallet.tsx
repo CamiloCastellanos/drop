@@ -20,7 +20,7 @@ export function Wallet() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
             />
             <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           </div>
@@ -31,14 +31,14 @@ export function Wallet() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
             />
             <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           </div>
 
           {/* Type Filter */}
           <div>
-            <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white">
+            <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark appearance-none bg-white">
               <option value="">Filtrar por tipo</option>
               <option value="entrada">Entrada</option>
               <option value="salida">Salida</option>
@@ -48,7 +48,7 @@ export function Wallet() {
 
         {/* Code and Transaction ID Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none bg-white">
+          <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark appearance-none bg-white">
             <option value="">Filtrar por código</option>
           </select>
 
@@ -56,7 +56,7 @@ export function Wallet() {
             <input
               type="text"
               placeholder="id de transacción"
-              className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
             />
             <button className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 bg-blue-500 text-white rounded">
               <Search size={16} />
@@ -80,7 +80,7 @@ export function Wallet() {
             <Download size={20} className="mr-2" />
             Descargar en Excel
           </button>
-          <button className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+          <button className="flex items-center px-4 py-2 bg-primary-dark text-white rounded-lg hover:bg-primary">
             <ArrowRightLeft size={20} className="mr-2" />
             Transferencia entre wallets
           </button>
@@ -90,7 +90,7 @@ export function Wallet() {
               <input
                 type="text"
                 placeholder="Buscar"
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-dark"
               />
             </div>
           </div>

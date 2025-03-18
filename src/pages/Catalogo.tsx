@@ -108,7 +108,7 @@ export function Catalogo() {
           <div className="flex items-center gap-8">
             {/* Favoritos */}
             <label className="flex items-center gap-2 cursor-pointer">
-              <Heart size={20} className="text-orange-500" />
+              <Heart size={20} className="text-primary" />
               <span className="text-gray-700">Favoritos</span>
               <div className="relative inline-block w-10 h-6 ml-2">
                 <input
@@ -119,7 +119,7 @@ export function Catalogo() {
                 />
                 <span
                   className={`absolute inset-0 rounded-full transition-colors duration-200 ${
-                    favoritos ? 'bg-orange-500' : 'bg-gray-200'
+                    favoritos ? 'bg-primary' : 'bg-gray-200'
                   }`}
                 >
                   <span
@@ -143,7 +143,7 @@ export function Catalogo() {
                 />
                 <span
                   className={`absolute inset-0 rounded-full transition-colors duration-200 ${
-                    privados ? 'bg-orange-500' : 'bg-gray-200'
+                    privados ? 'bg-primary' : 'bg-gray-200'
                   }`}
                 >
                   <span
@@ -167,7 +167,7 @@ export function Catalogo() {
                 />
                 <span
                   className={`absolute inset-0 rounded-full transition-colors duration-200 ${
-                    conOrdenes ? 'bg-orange-500' : 'bg-gray-200'
+                    conOrdenes ? 'bg-primary' : 'bg-gray-200'
                   }`}
                 >
                   <span
@@ -192,7 +192,7 @@ export function Catalogo() {
                 placeholder="Buscar"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -208,7 +208,7 @@ export function Catalogo() {
             <select
               value={proveedorSeleccionado}
               onChange={(e) => setProveedorSeleccionado(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">Proveedor</option>
               <option value="MAYORISTAS">MAYORISTAS</option>
@@ -230,7 +230,7 @@ export function Catalogo() {
                   setRangoPrecio({ ...rangoPrecio, min: e.target.value })
                 }
                 placeholder="0"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <span>—</span>
               <input
@@ -240,7 +240,7 @@ export function Catalogo() {
                   setRangoPrecio({ ...rangoPrecio, max: e.target.value })
                 }
                 placeholder="1.000.000"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -258,7 +258,7 @@ export function Catalogo() {
                   setRangoStock({ ...rangoStock, min: e.target.value })
                 }
                 placeholder="Mínimo"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <span>—</span>
               <input
@@ -268,7 +268,7 @@ export function Catalogo() {
                   setRangoStock({ ...rangoStock, max: e.target.value })
                 }
                 placeholder="Máximo"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -281,7 +281,7 @@ export function Catalogo() {
             <select
               value={categoriaSeleccionada}
               onChange={(e) => setCategoriaSeleccionada(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">Categorías</option>
               <option value="Tecnología">Tecnología</option>
@@ -300,7 +300,7 @@ export function Catalogo() {
           <select
             value={ciudadSeleccionada}
             onChange={(e) => setCiudadSeleccionada(e.target.value)}
-            className="w-full md:w-1/4 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full md:w-1/4 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Seleccione una ciudad</option>
             <option value="lima">Lima</option>
@@ -328,7 +328,7 @@ export function Catalogo() {
           <select
             value={ordenarPor}
             onChange={(e) => setOrdenarPor(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option>Aleatorio</option>
             <option>Precio: Menor a Mayor</option>
@@ -342,7 +342,7 @@ export function Catalogo() {
           <button
             onClick={() => setModoVista('cuadricula')}
             className={`p-2 rounded-lg ${
-              modoVista === 'cuadricula' ? 'bg-orange-100 text-orange-600' : 'text-gray-400 hover:text-gray-600'
+              modoVista === 'cuadricula' ? 'bg-primary-light text-primary' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <Grid size={20} />
@@ -350,7 +350,7 @@ export function Catalogo() {
           <button
             onClick={() => setModoVista('lista')}
             className={`p-2 rounded-lg ${
-              modoVista === 'lista' ? 'bg-orange-100 text-orange-600' : 'text-gray-400 hover:text-gray-600'
+              modoVista === 'lista' ? 'bg-primary-light text-primary' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <List size={20} />
@@ -412,7 +412,7 @@ export function Catalogo() {
                   </span>
                 </div>
               </div>
-              <button className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200">
+              <button className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors duration-200">
                 Enviar a cliente
               </button>
             </div>
