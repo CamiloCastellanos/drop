@@ -6,14 +6,14 @@ const slides = [
     id: 1,
     image: "https://images.unsplash.com/photo-1557821552-17105176677c?w=1200&h=600&q=80",
     title: "ESCALA TU E-COMMERCE 360°",
-    subtitle: "Los grandes líderes del e-commerce eligen Dropi para escalar",
+    subtitle: "Los grandes líderes del e-commerce eligen DropShy para escalar",
     event: {
       type: "Gran Workshop Virtual",
       speaker: "FRANKZ KASTNER",
       role: "Especialista en Escalamiento",
       date: "JUEVES 06 DE FEBRERO",
       time: "20:00 HRS.",
-      country: "PERU"
+      country: "COLOMBIA"
     }
   },
   {
@@ -65,8 +65,8 @@ export function Home() {
           <div className="absolute inset-0 flex flex-col justify-between p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <img src="https://flagcdn.com/pe.svg" alt="Peru" className="w-6 h-4" />
-                <span className="text-white font-medium">I {slides[currentSlide].event.country}</span>
+                {/* <img src="https://flagcdn.com/pe.svg" alt="Peru" className="w-6 h-4" />
+                <span className="text-white font-medium">I {slides[currentSlide].event.country}</span> */}
               </div>
             </div>
 
