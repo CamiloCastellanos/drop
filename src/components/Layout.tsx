@@ -173,7 +173,7 @@ export function Layout({ children }: LayoutProps) {
     },
     {
       icon: CreditCard,
-      text: 'Dropi Card',
+      text: 'DropShy Card',
       path: '/dropi-card',
       badge: t('badges.new')
     },

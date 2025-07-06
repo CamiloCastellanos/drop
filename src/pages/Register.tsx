@@ -308,7 +308,7 @@ export function Register() {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">© 2025 Dropi. ❤️</p>
+          <p className="text-xs text-gray-500">© 2025 DropShy. ❤️</p>
           <p className="text-xs text-gray-500">Versión: 2.4.0</p>
         </div>
       </div>

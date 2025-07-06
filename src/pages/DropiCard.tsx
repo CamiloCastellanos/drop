@@ -7,7 +7,7 @@ export function DropiCard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-800">Dropi Card</h1>
+      <h1 className="text-2xl font-semibold text-gray-800">DropShy Card</h1>
 
       <div className="flex flex-col items-center justify-center max-w-lg mx-auto">
         {/* Virtual Card */}
@@ -23,7 +23,7 @@ export function DropiCard() {
             <div className="flex justify-between items-start">
               <div className="text-white">
                 <CreditCard size={32} className="mb-2" />
-                <h2 className="text-lg font-semibold">Dropi Card</h2>
+                <h2 className="text-lg font-semibold">DropShy Card</h2>
               </div>
               <ContactlessPayment size={24} className="text-white/80" />
             </div>
@@ -55,12 +55,12 @@ export function DropiCard() {
 
         {/* Request Button */}
         <button className="px-8 py-3 bg-primary-dark text-white rounded-lg hover:bg-primary transition-colors duration-200 font-medium text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-          Solicitar Dropi Card
+          Solicitar DropShy Card
         </button>
 
         {/* Card Benefits */}
         <div className="mt-12 w-full space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 text-center mb-6">Beneficios de Dropi Card</h3>
+          <h3 className="text-xl font-semibold text-gray-800 text-center mb-6">Beneficios de DropShy Card</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
               <h4 className="font-medium text-gray-800 mb-2">Compras Seguras</h4>
